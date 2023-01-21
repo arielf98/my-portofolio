@@ -62,7 +62,7 @@ export const workDetails = [
     Position: "Mobile Engineer",
     Company: `Medan Digital Innovation`,
     Location: "Indonesia, Medan",
-    Type: "Internship",
+    Type: "Freelance",
     Duration: "Mar 2021 - Sep 2022",
   },
   {
