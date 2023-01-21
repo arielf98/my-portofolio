@@ -17,3 +17,4 @@ this is my portofolio
  ### Add feature
   - add medium link
   - add blogspot
+  - add wa link direct
