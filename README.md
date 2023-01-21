@@ -14,6 +14,6 @@ this is my portofolio
  - Vite 
  - SWC
  
- ##% Add feature
+ ### Add feature
   - add medium link
   - add blogspot
