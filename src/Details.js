@@ -1,9 +1,9 @@
 // Enter all your detials in this file
 // Logo images
-import logogradient from "./assets/logo.svg";
+import logoMe from "./assets/logo_me.svg";
 import logo from "./assets/logo2.svg";
 // Profile Image
-import profile from "./assets/profile.jpg";
+import profile from "./assets/portofolio_pict.png";
 // Tech stack images
 import html from "./assets/techstack/html.png";
 import css from "./assets/techstack/css.png";
@@ -29,67 +29,60 @@ import projectImage6 from "./assets/projects/project6.jpg";
 
 // Logos
 export const logos = {
-  logogradient: logogradient,
+  logogradient: logoMe,
   logo: logo,
 };
 
 // Enter your Personal Details here
 export const personalDetails = {
-  name: "Pavan MG",
+  name: "Ariel Febrian",
   tagline: "I build things for web",
   img: profile,
-  about: `Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.`,
+  about: `I am a software engineer with more than one year of experience in android and web development. I use Javascript and Typescript (React) for frontend , nodeJS for backend, react native for android development.`,
 };
 
 // Enter your Social Media URLs here
 export const socialMediaUrl = {
-  linkdein: "https://www.linkedin.com/",
-  github: "https://www.github.com/",
-  twitter: "https://twitter.com/",
-  instagram: "https://www.instagram.com/",
+  linkdein: "https://www.linkedin.com/in/ariel-febrian98/",
+  github: "https://github.com/arielf98",
+  twitter: "https://twitter.com/arielfebrian98",
+  instagram: "https://www.instagram.com/arielfebrianf/",
 };
 
 // Enter your Work Experience here
 export const workDetails = [
   {
-    Position: "Frontend Web Developer",
-    Company: `Company Name here`,
-    Location: "Bengaluru",
-    Type: "Full Time",
-    Duration: "Sep 2021 - Dec 2021",
+    Position: "Frontend Developer",
+    Company: `PT Bank Raya Indonesia Tbk`,
+    Location: "Indonesia, Yogyakarta",
+    Type: "Contract",
+    Duration: "Sepr 2022 - Present",
   },
   {
-    Position: "Internship",
-    Company: `Company Name here`,
-    Location: "Bengaluru",
+    Position: "Mobile Engineer",
+    Company: `Medan Digital Innovation`,
+    Location: "Indonesia, Medan",
     Type: "Internship",
-    Duration: "Sep 2021 - Dec 2021",
+    Duration: "Mar 2021 - Sep 2022",
   },
   {
-    Position: "Internship",
-    Company: `Company Name here`,
-    Location: "Bengaluru",
-    Type: "Internship",
-    Duration: "Sep 2021 - Dec 2021",
+    Position: "Generasi GIGIH 2021 - Front End Engineer",
+    Company: `Yayasan Anak Bangsa Bisa`,
+    Location: "Indonesia",
+    Type: "Apprenticeship",
+    Duration: "May 2021 - Dec 2021",
   },
 ];
 
 // Enter your Education Details here
 export const eduDetails = [
   {
-    Position: "Frontend Development",
-    Company: "Udemy, YouTube, Google, Medium",
-    Location: "Online",
-    Type: "Full Time",
-    Duration: "Jan 2022 - Present",
-  },
-  {
-    Position: "Bachelor in Electronics & Communication",
-    Company: `Your College Name here`,
-    Location: "Bengaluru",
-    Type: "Full Time",
-    Duration: "Aug 2020 - Present",
-  },
+    Position: "Technology Information",
+    Company: "Universitas Sumatera Utara",
+    Location: "Indonesia, Medan",
+    Type: "Bachelor",
+    Duration: "July 2017 - sep 2021",
+  }
 ];
 
 // Tech Stack and Tools
@@ -170,6 +163,6 @@ project lorem ipsum generator for dummy content`,
 
 // Enter your Contact Details here
 export const contactDetails = {
-  email: "hi@example.com",
-  phone: "+91 12345 67890",
+  email: "arielfebrian98@gmail.com",
+  phone: "+6281261019043",
 };

@@ -13,7 +13,7 @@ function Header() {
     <header className="container mx-auto md:flex justify-between py-2 max-width">
       <div className="flex justify-between items-center py-2 md:py-10">
         <NavLink to="/">
-          <img className="w-14" src={logos.logogradient} alt="logo" />
+          <img className="w-14" src={logos.logogradient} alt="logo" style={{width: 300, height: 180}}/>
         </NavLink>
         <div onClick={toggleClass} className="cursor-pointer">
           <svg
