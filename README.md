@@ -7,13 +7,13 @@ this is my portofolio
 
 ### TODO : 
 
-- add tech stack 
+### Add tech stack 
  - Typescript 
  - React
  - Material UI
  - Vite 
  - SWC
  
- - add feature
+ ##% Add feature
   - add medium link
   - add blogspot
