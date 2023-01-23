@@ -19,6 +19,9 @@ import git from "./assets/techstack/git.png";
 import npm from "./assets/techstack/npm.png";
 import postman from "./assets/techstack/postman.png";
 import figma from "./assets/techstack/figma.png";
+import go from "./assets/techstack/go.png";
+import rust from "./assets/techstack/rust.png";
+import ts from "./assets/techstack/ts.png";
 // Porject Images
 import projectImage1 from "./assets/projects/project1.jpg";
 import projectImage2 from "./assets/projects/project2.jpg";
@@ -101,6 +104,9 @@ export const techStackDetails = {
   git: git,
   github: github,
   figma: figma,
+  go: go,
+  rust: rust,
+  ts
 };
 
 // Enter your Project Details here
