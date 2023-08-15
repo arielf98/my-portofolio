@@ -20,10 +20,10 @@ const illustration = {
 };
 
 const greeting = {
-  username: "Saad Pasta",
-  title: "Hi all, I'm Saad",
+  username: "Ariel Febrian",
+  title: "Hi all, I'm Ariel",
   subTitle: emoji(
-    "A passionate Full Stack Software Developer 🚀 having an experience of building Web and Mobile applications with JavaScript / Reactjs / Nodejs / React Native and some other cool libraries and frameworks."
+    "As an experienced software engineer, I work with JS (Javascript) and TS (Typescript), have several experiences in frontend web and mobile, and utilize popular libraries such as React and React Native."
   ),
   resumeLink:
     "https://drive.google.com/file/d/1ofFdKF_mqscH8WvXkSObnVvC9kK7Ldlu/view?usp=sharing", // Set to empty to hide the button
@@ -49,7 +49,7 @@ const socialMediaLinks = {
 
 const skillsSection = {
   title: "What I do",
-  subTitle: "CRAZY FULL STACK DEVELOPER WHO WANTS TO EXPLORE EVERY TECH STACK",
+  subTitle: "Front End Developer who want to try be Back End and many more fields...",
   skills: [
     emoji(
       "⚡ Develop highly interactive Front end / User Interfaces for your web and mobile applications"
@@ -150,7 +150,7 @@ const educationInfo = {
 // Your top 3 proficient stacks/tech experience
 
 const techStack = {
-  viewSkillBars: true, //Set it to true to show Proficiency Section
+  viewSkillBars: false, //Set it to true to show Proficiency Section
   experience: [
     {
       Stack: "Frontend/Design", //Insert stack or technology you have experience in
@@ -174,30 +174,30 @@ const workExperiences = {
   display: true, //Set it to true to show workExperiences Section
   experience: [
     {
-      role: "Software Engineer",
-      company: "Facebook",
-      companylogo: require("./assets/images/facebookLogo.png"),
-      date: "June 2018 – Present",
-      desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+      role: "Front End Developer",
+      company: "BTPN Syariah",
+      companylogo: require("./assets/images/BTPNSyariah.jpg"),
+      date: "Jul 2023 – Current",
+      desc: "Maintain Mobile apps Warung Tepat."
+    },
+    {
+      role: "Front End Engineer",
+      company: "PT Bank Raya Indonesia Tbk",
+      companylogo: require("./assets/images/Raya.jpg"),
+      date: "Sep 2022 – Jul 2023",
+      desc: "Initialize To improve the Pinang Flexi internal dashboard, I recommend initiating a codebase refactoring from JavaScript to Typescript. Additionally, I suggest enhancing development time by switching from Webpack to Vite as the bundler and replacing Babel with SWC (Speedy Web Compiler) as the JavaScript compiler.Developing a web view for Dana Siaga (Pinang Flexi) x BPJS to integrate seamlessly into the BPJS apps."
+    },
+    {
+      role: "Android Engineer",
+      company: "Medan Digital Innovation",
+      companylogo: require("./assets/images/medio.jpg"),
+      date: "Mar 2021 – Sep 2022",
+      desc: "At Medan Digital Innovation, I have accomplished the following projects.",
       descBullets: [
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
+        "Developed an E-Commerce mobile application for Mahkota Store, which is the largest smartphone seller in Binjai City, North Sumatra, Indonesia. ",
+        "Developed an Android application for PLN UPT Medan called Guest and Monitoring Security."
       ]
     },
-    {
-      role: "Front-End Developer",
-      company: "Quora",
-      companylogo: require("./assets/images/quoraLogo.png"),
-      date: "May 2017 – May 2018",
-      desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-    },
-    {
-      role: "Software Engineer Intern",
-      company: "Airbnb",
-      companylogo: require("./assets/images/airbnbLogo.png"),
-      date: "Jan 2015 – Sep 2015",
-      desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-    }
   ]
 };
 
@@ -239,7 +239,7 @@ const bigProjects = {
       ]
     }
   ],
-  display: true // Set false to hide this section, defaults to true
+  display: false // Set false to hide this section, defaults to true
 };
 
 // Achievement Section
@@ -252,53 +252,44 @@ const achievementSection = {
 
   achievementsCards: [
     {
-      title: "Google Code-In Finalist",
+      title: "Master The Fundamental Of Math",
       subtitle:
-        "First Pakistani to be selected as Google Code-in Finalist from 4000 students from 77 different countries.",
-      image: require("./assets/images/codeInLogo.webp"),
-      imageAlt: "Google Code-In Logo",
+        "Udemy course for Fundamental Math",
+      image: require("./assets/images/Udemy.jpg"),
+      imageAlt: "Udemy Logo",
       footerLink: [
         {
-          name: "Certification",
-          url: "https://drive.google.com/file/d/0B7kazrtMwm5dYkVvNjdNWjNybWJrbndFSHpNY2NFV1p4YmU0/view?usp=sharing"
+          name: "Certificate",
+          url: "https://www.udemy.com/certificate/UC-51d8b169-bf03-4c8e-9dc5-0f41aeaf5cfc/"
         },
         {
-          name: "Award Letter",
-          url: "https://drive.google.com/file/d/0B7kazrtMwm5dekxBTW5hQkg2WXUyR3QzQmR0VERiLXlGRVdF/view?usp=sharing"
-        },
+          name: "Udemy",
+        }, 
         {
-          name: "Google Code-in Blog",
-          url: "https://opensource.googleblog.com/2019/01/google-code-in-2018-winners.html"
+          name: "Course"
         }
       ]
     },
     {
-      title: "Google Assistant Action",
+      title: "Generasi Gigih Certificate",
       subtitle:
-        "Developed a Google Assistant Action JavaScript Guru that is available on 2 Billion devices world wide.",
-      image: require("./assets/images/googleAssistantLogo.webp"),
-      imageAlt: "Google Assistant Action Logo",
+        "Generasi GIGIH 2021 Batch 1 - Front End Engineer.",
+      image: require("./assets/images/GotoImpactFoundation.jpg"),
+      imageAlt: "Goto Impact Foundation Logo",
       footerLink: [
+       
         {
-          name: "View Google Assistant Action",
-          url: "https://assistant.google.com/services/a/uid/000000100ee688ee?hl=en"
-        }
+          name: "Certificate",
+          url: "https://drive.google.com/file/d/1M2aNN6mTMgJ2eeXIV2n30ClUpm9N2Y0R/view?usp=sharing"
+        },
+        {
+          name: "Goto Impact Foundation",
+        }, 
+        {
+          name: "Apprenticeship",
+        }, 
       ]
     },
-
-    {
-      title: "PWA Web App Developer",
-      subtitle: "Completed Certifcation from SMIT for PWA Web App Development",
-      image: require("./assets/images/pwaLogo.webp"),
-      imageAlt: "PWA Logo",
-      footerLink: [
-        {name: "Certification", url: ""},
-        {
-          name: "Final Project",
-          url: "https://pakistan-olx-1.firebaseapp.com/"
-        }
-      ]
-    }
   ],
   display: true // Set false to hide this section, defaults to true
 };
@@ -356,7 +347,7 @@ const podcastSection = {
   podcast: [
     "https://anchor.fm/codevcast/embed/episodes/DevStory---Saad-Pasta-from-Karachi--Pakistan-e9givv/a-a15itvo"
   ],
-  display: true // Set false to hide this section, defaults to true
+  display: false  // Set false to hide this section, defaults to true
 };
 
 const contactInfo = {
@@ -371,7 +362,7 @@ const contactInfo = {
 
 const twitterDetails = {
   userName: "twitter", //Replace "twitter" with your twitter username without @
-  display: true // Set true to display this section, defaults to false
+  display: false // Set true to display this section, defaults to false
 };
 
 const isHireable = false; // Set false if you are not looking for a job. Also isHireable will be display as Open for opportunities: Yes/No in the GitHub footer
