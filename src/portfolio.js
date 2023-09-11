@@ -26,7 +26,7 @@ const greeting = {
     "As an experienced software engineer, I work with JS (Javascript) and TS (Typescript), have several experiences in frontend web and mobile, and utilize popular libraries such as React and React Native."
   ),
   resumeLink:
-    "https://drive.google.com/file/d/1ofFdKF_mqscH8WvXkSObnVvC9kK7Ldlu/view?usp=sharing", // Set to empty to hide the button
+    "https://drive.google.com/file/d/1apgehhEgRdejVoSESYZ4y6xTRq7nKyhY/view?usp=sharing", // Set to empty to hide the button
   displayGreeting: true // Set false to hide this section, defaults to true
 };
 
