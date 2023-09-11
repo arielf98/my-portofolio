@@ -33,13 +33,13 @@ const greeting = {
 // Social Media Links
 
 const socialMediaLinks = {
-  github: "https://github.com/saadpasta",
-  linkedin: "https://www.linkedin.com/in/saadpasta/",
-  gmail: "saadpasta70@gmail.com",
-  gitlab: "https://gitlab.com/saadpasta",
-  facebook: "https://www.facebook.com/saad.pasta7",
-  medium: "https://medium.com/@saadpasta",
-  stackoverflow: "https://stackoverflow.com/users/10422806/saad-pasta",
+  github: "https://github.com/arielf98",
+  linkedin: "https://www.linkedin.com/in/ariel-febrian98/",
+  gmail: "arielfebrian98@gmail.com",
+  // gitlab: "https://gitlab.com/saadpasta",
+  // facebook: "https://www.facebook.com/saad.pasta7",
+  // medium: "https://medium.com/@saadpasta",
+  // stackoverflow: "https://stackoverflow.com/users/10422806/saad-pasta",
   // Instagram, Twitter and Kaggle are also supported in the links!
   // To customize icons and social links, tweak src/components/SocialMedia
   display: true // Set true to display this section, defaults to false
@@ -49,12 +49,12 @@ const socialMediaLinks = {
 
 const skillsSection = {
   title: "What I do",
-  subTitle: "Front End Developer who want to try be Back End and many more fields...",
+  subTitle:
+    "Front End Developer who want to try be Back End and many more fields...",
   skills: [
     emoji(
       "⚡ Develop highly interactive Front end / User Interfaces for your web and mobile applications"
     ),
-    emoji("⚡ Progressive Web Applications ( PWA ) in normal and SPA Stacks"),
     emoji(
       "⚡ Integration of third party services such as Firebase/ AWS / Digital Ocean"
     )
@@ -89,33 +89,25 @@ https://fontawesome.com/icons?d=gallery */
       fontAwesomeClassname: "fab fa-node"
     },
     {
-      skillName: "swift",
-      fontAwesomeClassname: "fab fa-swift"
-    },
-    {
       skillName: "npm",
       fontAwesomeClassname: "fab fa-npm"
     },
-    {
-      skillName: "sql-database",
-      fontAwesomeClassname: "fas fa-database"
-    },
-    {
-      skillName: "aws",
-      fontAwesomeClassname: "fab fa-aws"
-    },
+    // {
+    //   skillName: "sql-database",
+    //   fontAwesomeClassname: "fas fa-database"
+    // },
     {
       skillName: "firebase",
       fontAwesomeClassname: "fas fa-fire"
-    },
-    {
-      skillName: "python",
-      fontAwesomeClassname: "fab fa-python"
-    },
-    {
-      skillName: "docker",
-      fontAwesomeClassname: "fab fa-docker"
     }
+    // {
+    //   skillName: "python",
+    //   fontAwesomeClassname: "fab fa-python"
+    // },
+    // {
+    //   skillName: "docker",
+    //   fontAwesomeClassname: "fab fa-docker"
+    // }
   ],
   display: true // Set false to hide this section, defaults to true
 };
@@ -126,23 +118,13 @@ const educationInfo = {
   display: true, // Set false to hide this section, defaults to true
   schools: [
     {
-      schoolName: "Harvard University",
-      logo: require("./assets/images/harvardLogo.png"),
+      schoolName: "Universitas Sumatera Utara (USU)",
+      logo: require("./assets/images/logo_usu.jpg"),
       subHeader: "Master of Science in Computer Science",
-      duration: "September 2017 - April 2019",
-      desc: "Participated in the research of XXX and published 3 papers.",
-      descBullets: [
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
-      ]
-    },
-    {
-      schoolName: "Stanford University",
-      logo: require("./assets/images/stanfordLogo.png"),
-      subHeader: "Bachelor of Science in Computer Science",
-      duration: "September 2013 - April 2017",
-      desc: "Ranked top 10% in the program. Took courses about Software Engineering, Web Security, Operating Systems, ...",
-      descBullets: ["Lorem ipsum dolor sit amet, consectetur adipiscing elit"]
+      duration: "Juli 2017 - April 2022",
+      desc: "Activities and societies: In 2017-2018, I had the honor to serve as Chair of the University of North Sumatra 3T Affirmation Scholarship Student Association which focuses on providing support to students from 3T areas. In addition, I am a finalist in the Business IT Case Competition at IT FEST 2020. My academic"
+      // descBullets: [
+      // ]
     }
   ]
 };
@@ -197,7 +179,7 @@ const workExperiences = {
         "Developed an E-Commerce mobile application for Mahkota Store, which is the largest smartphone seller in Binjai City, North Sumatra, Indonesia. ",
         "Developed an Android application for PLN UPT Medan called Guest and Monitoring Security."
       ]
-    },
+    }
   ]
 };
 
@@ -253,8 +235,7 @@ const achievementSection = {
   achievementsCards: [
     {
       title: "Master The Fundamental Of Math",
-      subtitle:
-        "Udemy course for Fundamental Math",
+      subtitle: "Udemy course for Fundamental Math",
       image: require("./assets/images/Udemy.jpg"),
       imageAlt: "Udemy Logo",
       footerLink: [
@@ -263,8 +244,8 @@ const achievementSection = {
           url: "https://www.udemy.com/certificate/UC-51d8b169-bf03-4c8e-9dc5-0f41aeaf5cfc/"
         },
         {
-          name: "Udemy",
-        }, 
+          name: "Udemy"
+        },
         {
           name: "Course"
         }
@@ -272,24 +253,22 @@ const achievementSection = {
     },
     {
       title: "Generasi Gigih Certificate",
-      subtitle:
-        "Generasi GIGIH 2021 Batch 1 - Front End Engineer.",
+      subtitle: "Generasi GIGIH 2021 Batch 1 - Front End Engineer.",
       image: require("./assets/images/GotoImpactFoundation.jpg"),
       imageAlt: "Goto Impact Foundation Logo",
       footerLink: [
-       
         {
           name: "Certificate",
           url: "https://drive.google.com/file/d/1M2aNN6mTMgJ2eeXIV2n30ClUpm9N2Y0R/view?usp=sharing"
         },
         {
-          name: "Goto Impact Foundation",
-        }, 
+          name: "Goto Impact Foundation"
+        },
         {
-          name: "Apprenticeship",
-        }, 
+          name: "Apprenticeship"
+        }
       ]
-    },
+    }
   ],
   display: true // Set false to hide this section, defaults to true
 };
@@ -347,15 +326,15 @@ const podcastSection = {
   podcast: [
     "https://anchor.fm/codevcast/embed/episodes/DevStory---Saad-Pasta-from-Karachi--Pakistan-e9givv/a-a15itvo"
   ],
-  display: false  // Set false to hide this section, defaults to true
+  display: false // Set false to hide this section, defaults to true
 };
 
 const contactInfo = {
   title: emoji("Contact Me ☎️"),
   subtitle:
     "Discuss a project or just want to say hi? My Inbox is open for all.",
-  number: "+92-0000000000",
-  email_address: "saadpasta70@gmail.com"
+  number: "+62 0812-6101-9043",
+  email_address: "arielfebrian98@gmail.com"
 };
 
 // Twitter Section
