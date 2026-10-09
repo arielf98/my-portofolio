@@ -3,6 +3,8 @@ import { access, lstat, mkdir, readFile, readdir, writeFile } from 'node:fs/prom
 import { createServer } from 'node:http';
 import { basename, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// shortcut: reuse Astro's installed renderer; add it directly if Astro stops hoisting it to the project root.
+import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 
 const root = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const blogRoot = join(root, 'src', 'content', 'blog');
@@ -11,6 +13,7 @@ const html = await readFile(new URL('./writing-editor.html', import.meta.url));
 const host = '127.0.0.1';
 const maxRequestBytes = 12 * 1024 * 1024;
 const maxImageBytes = 8 * 1024 * 1024;
+const markdownRenderer = await createMarkdownProcessor();
 
 const sendJson = (res, status, value) => {
   res.writeHead(status, {
@@ -102,6 +105,26 @@ function markdownFrom(data) {
   return `${fields.join('\n')}\n---\n\n${data.body.trim()}\n`;
 }
 
+async function renderPreview(data) {
+  localeDirectory(data.lang);
+  const body = textField(data.body, 'Article content', 500_000);
+  const tags = Array.isArray(data.tags) ? data.tags : [];
+  if (tags.length > 12 || tags.some((tag) => typeof tag !== 'string' || !tag.trim() || tag.length > 40)) {
+    throw error(400, 'Use up to 12 tags, each under 40 characters.');
+  }
+
+  let coverName = '';
+  const cover = textField(data.cover ?? '', 'Cover path', 240);
+  if (cover) {
+    coverName = cover.replace(/^\.\.\/images\//, '');
+    try { await readImageName(coverName); } catch { throw error(400, 'The selected cover image was not found in the project.'); }
+    textField(data.coverAlt, 'Cover photo description', 240, true);
+  }
+
+  const { code } = await markdownRenderer.render(body);
+  return { html: code, coverName };
+}
+
 async function savePost(data) {
   const lang = data.lang;
   const directory = localeDirectory(lang);
@@ -169,9 +192,14 @@ const server = createServer(async (req, res) => {
         'content-type': 'text/html; charset=utf-8',
         'cache-control': 'no-store',
         'x-content-type-options': 'nosniff',
-        'content-security-policy': "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+        'content-security-policy': "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; connect-src 'self'; frame-src 'self' about:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
       });
       res.end(html);
+      return;
+    }
+    if (req.method === 'GET' && requestUrl.pathname === '/api/site.css') {
+      res.writeHead(200, { 'content-type': 'text/css; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+      res.end(await readFile(new URL('../src/styles/global.css', import.meta.url)));
       return;
     }
     if (req.method === 'GET' && requestUrl.pathname === '/api/posts') {
@@ -200,13 +228,15 @@ const server = createServer(async (req, res) => {
       res.end(bytes);
       return;
     }
-    if (req.method === 'POST' && (requestUrl.pathname === '/api/save' || requestUrl.pathname === '/api/image')) {
+    if (req.method === 'POST' && ['/api/save', '/api/image', '/api/preview'].includes(requestUrl.pathname)) {
       const expectedOrigin = `http://${req.headers.host}`;
       if (req.headers.origin !== expectedOrigin) throw error(403, 'Requests must come from this local editor.');
       const data = await readJson(req);
       if (requestUrl.pathname === '/api/save') {
         const path = await savePost(data);
         sendJson(res, 200, { path });
+      } else if (requestUrl.pathname === '/api/preview') {
+        sendJson(res, 200, await renderPreview(data));
       } else {
         sendJson(res, 201, await saveImage(data));
       }

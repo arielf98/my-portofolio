@@ -46,6 +46,8 @@
       .preview-panel { position:sticky; top:1rem; }
       .path-preview { overflow-wrap:anywhere; margin:-.5rem 0 1rem; color:var(--muted); font: .78rem/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
       pre { max-height:65vh; overflow:auto; margin:0; padding:1rem; border:1px solid var(--line); border-radius:4px; color:#343434; background:#fbfaf8; white-space:pre-wrap; overflow-wrap:anywhere; font: .78rem/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; }
+      .rendered-preview { display:block; width:100%; height:68vh; min-height:500px; border:1px solid var(--line); border-radius:4px; background:white; }
+      .rendered-preview[hidden] { display:none; }
       .status { min-height:1.6rem; margin:.85rem 0 0; color:#28703a; font-size:.85rem; }
       .status.error { color:#a22d23; }
       .footer-note { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--line); color:var(--muted); font-size:.78rem; }
@@ -140,6 +142,8 @@
             <div class="actions" style="margin-top:1rem">
               <button class="primary" id="savePost" type="submit">Simpan langsung ke proyek</button>
               <button id="copyMarkdown" type="button">Salin Markdown</button>
+              <button id="showPreview" type="button" aria-controls="articlePreview">Preview tulisan</button>
+              <button id="showMarkdown" type="button" aria-controls="markdownPreview" hidden>Lihat Markdown</button>
             </div>
             <p id="status" class="status" role="status" aria-live="polite"></p>
           </form>
@@ -148,6 +152,7 @@
           <h2 id="preview-heading">File yang akan disimpan</h2>
           <p id="pathPreview" class="path-preview"></p>
           <pre id="markdownPreview"></pre>
+          <iframe id="articlePreview" class="rendered-preview" title="Preview tulisan" sandbox hidden></iframe>
           <p class="footer-note">Setelah disimpan, file sudah berada di folder locale yang benar. Cek pratinjau situs, lalu push perubahan ke GitHub untuk menerbitkannya lewat GitHub Pages.</p>
         </aside>
       </div>
@@ -169,6 +174,9 @@
       const coverPreview = $('#coverPreview');
       const body = $('#body');
       const preview = $('#markdownPreview');
+      const previewFrame = $('#articlePreview');
+      const previewHeading = $('#preview-heading');
+      const pathPreview = $('#pathPreview');
       const status = $('#status');
       const existingPost = $('#existingPost');
       let loadedPost = null;
@@ -183,6 +191,28 @@
       const toSlug = (value) => value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       const yamlString = (value) => JSON.stringify(value);
       const getTags = () => tags.value.split(',').map((tag) => tag.trim()).filter(Boolean);
+      const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+
+      function articlePreviewDocument(result) {
+        const rendered = new DOMParser().parseFromString(result.html, 'text/html');
+        for (const image of rendered.querySelectorAll('img[src]')) {
+          const match = image.getAttribute('src').match(/^\.\.\/images\/([a-z0-9][a-z0-9._-]*\.(?:png|jpe?g|webp))$/i);
+          if (match) image.setAttribute('src', `${location.origin}/api/image?name=${encodeURIComponent(match[1])}`);
+        }
+        const origin = escapeHtml(location.origin);
+        const formatDate = (value) => new Intl.DateTimeFormat(lang.value === 'id' ? 'id-ID' : 'en-US', {
+          day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+        }).format(new Date(`${value}T00:00:00.000Z`));
+        const meta = [
+          pubDate.value && `<time datetime="${escapeHtml(pubDate.value)}">${escapeHtml(formatDate(pubDate.value))}</time>`,
+          updatedDate.value && `<span>${lang.value === 'id' ? 'Diperbarui' : 'Updated'} ${escapeHtml(formatDate(updatedDate.value))}</span>`,
+          getTags().length && `<span class="tag-list">${getTags().map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}</span>`,
+        ].filter(Boolean).join('');
+        const cover = result.coverName
+          ? `<figure class="article-cover"><img src="${origin}/api/image?name=${encodeURIComponent(result.coverName)}" alt="${escapeHtml(coverAlt.value)}"></figure>`
+          : '';
+        return `<!doctype html><html lang="${escapeHtml(lang.value)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src ${origin} 'unsafe-inline'; img-src ${origin} blob:; font-src ${origin}; form-action 'none'; base-uri 'none'"><link rel="stylesheet" href="${origin}/api/site.css"><title>${escapeHtml(title.value)}</title></head><body><main id="main" class="reading-column"><article class="long-read"><header class="article-header"><p class="eyebrow">${lang.value === 'id' ? 'Tulisan' : 'Writing'}</p><h1 class="article-title">${escapeHtml(title.value)}</h1><p class="article-deck">${escapeHtml(description.value)}</p><div class="post-meta">${meta}</div></header>${cover}<div class="article-content">${rendered.body.innerHTML}</div></article></main></body></html>`;
+      }
 
       function markdownOutput() {
         const lines = ['---', `title: ${yamlString(title.value.trim())}`, `description: ${yamlString(description.value.trim())}`, `pubDate: ${pubDate.value}`];
@@ -199,6 +229,16 @@
       function updatePreview() {
         preview.textContent = markdownOutput();
         pathPreview.textContent = `src/content/blog/${lang.value}/${slug.value || 'judul-artikel'}.md`;
+      }
+
+      function showMarkdownSource() {
+        previewFrame.srcdoc = '';
+        previewFrame.hidden = true;
+        preview.hidden = false;
+        pathPreview.hidden = false;
+        previewHeading.textContent = 'File yang akan disimpan';
+        $('#showPreview').textContent = 'Preview tulisan';
+        $('#showMarkdown').hidden = true;
       }
 
       function setStatus(message, isError = false) {
@@ -285,6 +325,7 @@
         translationKeyWasEdited = true;
         showCoverPreview();
         $('#savePost').textContent = 'Simpan perubahan';
+        showMarkdownSource();
         updatePreview();
         setStatus(`Tulisan dimuat dari src/content/blog/${lang.value}/${postSlug}.md.`);
       }
@@ -292,6 +333,7 @@
       function resetEditor() {
         const selectedLang = lang.value;
         form.reset();
+        showMarkdownSource();
         lang.value = selectedLang;
         pubDate.value = localDate();
         coverPreview.removeAttribute('src');
@@ -386,6 +428,7 @@
       }
       lang.addEventListener('change', async () => {
         loadedPost = null;
+        showMarkdownSource();
         slugWasEdited = false;
         $('#savePost').textContent = 'Simpan langsung ke proyek';
         try { await refreshPosts(); } catch (err) { setStatus(err.message, true); }
@@ -446,6 +489,34 @@
           setStatus('Markdown disalin ke clipboard.');
         } catch { setStatus('Clipboard tidak tersedia. Salin isi panel pratinjau secara manual.', true); }
       });
+      $('#showPreview').addEventListener('click', async () => {
+        const button = $('#showPreview');
+        button.disabled = true;
+        try {
+          const response = await fetch('/api/preview', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              lang: lang.value, title: title.value, description: description.value,
+              pubDate: pubDate.value, updatedDate: updatedDate.value, tags: getTags(),
+              cover: coverPath.value, coverAlt: coverAlt.value, body: body.value,
+            }),
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Preview tulisan gagal dibuat.');
+          previewFrame.srcdoc = articlePreviewDocument(result);
+          preview.hidden = true;
+          previewFrame.hidden = false;
+          pathPreview.hidden = true;
+          previewHeading.textContent = 'Preview tulisan';
+          button.textContent = 'Perbarui preview';
+          $('#showMarkdown').hidden = false;
+          setStatus('Preview siap. Klik Perbarui preview setelah mengubah tulisan.');
+          if (window.matchMedia('(max-width: 800px)').matches) previewFrame.scrollIntoView({ block: 'nearest' });
+        } catch (err) { setStatus(err.message, true); }
+        finally { button.disabled = false; }
+      });
+      $('#showMarkdown').addEventListener('click', showMarkdownSource);
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const button = $('#savePost');
