@@ -41,6 +41,7 @@
       .upload-row { align-items:center; }
       .upload-row input[type="file"] { max-width:250px; padding:.35rem; font-size:.78rem; }
       .upload-block { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--line); }
+      .inline-size { max-width:240px; margin-top:.75rem; }
       .preview-cover { display:none; width:min(100%,360px); max-height:220px; margin-top:.75rem; border-radius:4px; object-fit:cover; }
       .checkline { display:flex; align-items:center; gap:.5rem; padding:.4rem 0; }
       .preview-panel { position:sticky; top:1rem; }
@@ -135,6 +136,14 @@
                     <input id="inlineAlt" placeholder="Deskripsi foto" />
                     <input id="inlineFile" type="file" accept="image/png,image/jpeg,image/webp" />
                     <button id="insertPhoto" type="button">Unggah & sisipkan</button>
+                  </div>
+                  <div class="field inline-size">
+                    <label for="inlineSize">Ukuran gambar</label>
+                    <select id="inlineSize">
+                      <option value="100">Lebar penuh (100%)</option>
+                      <option value="75">Sedang (75%)</option>
+                      <option value="50">Kecil (50%)</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -450,8 +459,9 @@
         try {
           const result = await uploadImage($('#inlineFile').files[0], 'inline');
           const alt = $('#inlineAlt').value.trim() || $('#inlineFile').files[0].name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
-          insertAtCursor(`![${alt}](../images/${result.filename})\n\n`);
-          setStatus(`Foto ${result.mimeType.slice(6).toUpperCase()} (${Math.round(result.size / 1024)} KB) tersimpan dan Markdown-nya disisipkan ke isi tulisan.`);
+          const width = $('#inlineSize').value;
+          insertAtCursor(`![${alt}](../images/${result.filename} "width=${width}%")\n\n`);
+          setStatus(`Foto ${result.mimeType.slice(6).toUpperCase()} (${Math.round(result.size / 1024)} KB) tersimpan dan disisipkan dengan lebar ${width}%.`);
           $('#inlineFile').value = '';
         } catch (err) { setStatus(err.message, true); }
       });

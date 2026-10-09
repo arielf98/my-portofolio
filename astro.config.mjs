@@ -1,4 +1,6 @@
 import { defineConfig } from 'astro/config';
+import { unified } from '@astrojs/markdown-remark';
+import remarkImageSize from './tools/remark-image-size.mjs';
 
 const [owner, repository] = process.env.GITHUB_REPOSITORY?.split('/') ?? [];
 const explicitSite = process.env.ASTRO_SITE || undefined;
@@ -14,6 +16,9 @@ export default defineConfig({
   base,
   output: 'static',
   trailingSlash: 'always',
+  markdown: {
+    processor: unified({ remarkPlugins: [remarkImageSize] }),
+  },
   i18n: {
     locales: ['id', 'en'],
     defaultLocale: 'en',

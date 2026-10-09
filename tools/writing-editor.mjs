@@ -3,8 +3,8 @@ import { access, lstat, mkdir, readFile, readdir, writeFile } from 'node:fs/prom
 import { createServer } from 'node:http';
 import { basename, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-// shortcut: reuse Astro's installed renderer; add it directly if Astro stops hoisting it to the project root.
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
+import remarkImageSize from './remark-image-size.mjs';
 
 const root = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const blogRoot = join(root, 'src', 'content', 'blog');
@@ -13,7 +13,7 @@ const html = await readFile(new URL('./writing-editor.html', import.meta.url));
 const host = '127.0.0.1';
 const maxRequestBytes = 12 * 1024 * 1024;
 const maxImageBytes = 8 * 1024 * 1024;
-const markdownRenderer = await createMarkdownProcessor();
+const markdownRenderer = await createMarkdownProcessor({ remarkPlugins: [remarkImageSize] });
 
 const sendJson = (res, status, value) => {
   res.writeHead(status, {
