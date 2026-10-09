@@ -31,7 +31,7 @@ const posts = (await getCollection('blog'))
       <h1 class="page-title">Writing</h1>
       <p>Notes about work, products, and things I am learning.</p>
     </header>
-    {posts.length > 0 ? <PostList items={posts} locale={locale} /> : <p class="empty-state">No writing yet. Please check back later.</p>}
+    {posts.length > 0 ? <PostList items={posts} locale={locale} filterable /> : <p class="empty-state">No writing yet. Please check back later.</p>}
   </main>
   <SiteFooter locale={locale} />
 </BaseLayout>

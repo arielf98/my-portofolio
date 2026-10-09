@@ -31,7 +31,7 @@ const posts = (await getCollection('blog'))
       <h1 class="page-title">Tulisan</h1>
       <p>Catatan tentang pekerjaan, produk, dan hal-hal yang sedang dipelajari.</p>
     </header>
-    {posts.length > 0 ? <PostList items={posts} locale={locale} /> : <p class="empty-state">Belum ada tulisan. Silakan kembali lagi nanti.</p>}
+    {posts.length > 0 ? <PostList items={posts} locale={locale} filterable /> : <p class="empty-state">Belum ada tulisan. Silakan kembali lagi nanti.</p>}
   </main>
   <SiteFooter locale={locale} />
 </BaseLayout>

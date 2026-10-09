@@ -15,17 +15,47 @@ interface PostItem {
 interface Props {
   items: PostItem[];
   locale: 'id' | 'en';
+  filterable?: boolean;
 }
 
-const { items, locale } = Astro.props;
+const { items, locale, filterable = false } = Astro.props;
+const isId = locale === 'id';
+const tags = [...new Set(items.flatMap((item) => item.tags))].sort((a, b) => a.localeCompare(b, locale));
 const dateLocale = locale === 'id' ? 'id-ID' : 'en-US';
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat(dateLocale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(date);
 ---
 
+<div data-post-browser={filterable ? locale : undefined}>
+  {filterable && (
+    <>
+      <div class="post-controls" hidden>
+        <label>
+          <span>{isId ? 'Cari tulisan' : 'Search writing'}</span>
+          <input type="search" data-post-search placeholder={isId ? 'Cari judul atau tag' : 'Search titles or tags'} />
+        </label>
+        <label>
+          <span>Tag</span>
+          <select data-post-tag>
+            <option value="">{isId ? 'Semua tag' : 'All tags'}</option>
+            {tags.map((tag) => <option value={tag}>{tag}</option>)}
+          </select>
+        </label>
+        <label>
+          <span>{isId ? 'Urutkan' : 'Sort by'}</span>
+          <select data-post-sort>
+            <option value="latest">{isId ? 'Terbaru' : 'Newest first'}</option>
+            <option value="title-asc">{isId ? 'Judul A–Z' : 'Title A–Z'}</option>
+            <option value="title-desc">{isId ? 'Judul Z–A' : 'Title Z–A'}</option>
+          </select>
+        </label>
+      </div>
+      <p class="post-results" data-post-results role="status" aria-live="polite" hidden></p>
+    </>
+  )}
 <ol class="post-list">
   {items.map((item) => (
-    <li class="post-row">
+    <li class="post-row" data-title={filterable ? item.title : undefined} data-tags={filterable ? JSON.stringify(item.tags) : undefined} data-date={filterable ? item.pubDate.valueOf() : undefined}>
       <article>
         <div class="post-copy">
           <a href={item.href}><h2>{item.title}</h2></a>
@@ -44,3 +74,49 @@ const formatDate = (date: Date) =>
     </li>
   ))}
 </ol>
+  {filterable && <p class="empty-state" data-post-empty hidden>{isId ? 'Tidak ada tulisan yang cocok.' : 'No matching writing found.'}</p>}
+</div>
+
+<script>
+  for (const browser of document.querySelectorAll<HTMLElement>('[data-post-browser]')) {
+    const locale = browser.dataset.postBrowser ?? 'en';
+    const search = browser.querySelector<HTMLInputElement>('[data-post-search]')!;
+    const tag = browser.querySelector<HTMLSelectElement>('[data-post-tag]')!;
+    const sort = browser.querySelector<HTMLSelectElement>('[data-post-sort]')!;
+    const list = browser.querySelector<HTMLOListElement>('.post-list')!;
+    const results = browser.querySelector<HTMLElement>('[data-post-results]')!;
+    const empty = browser.querySelector<HTMLElement>('[data-post-empty]')!;
+    const rows = Array.from(list.querySelectorAll<HTMLElement>('.post-row')).map((element, index) => {
+      const title = element.dataset.title!;
+      const tags: string[] = JSON.parse(element.dataset.tags!);
+      return { element, index, title, tags, date: Number(element.dataset.date), text: `${title} ${tags.join(' ')}`.toLocaleLowerCase(locale) };
+    });
+    const collator = new Intl.Collator(locale, { sensitivity: 'base' });
+
+    function update() {
+      const query = search.value.trim().toLocaleLowerCase(locale);
+      const sorted = [...rows].sort((a, b) => {
+        if (sort.value === 'title-asc') return collator.compare(a.title, b.title);
+        if (sort.value === 'title-desc') return collator.compare(b.title, a.title);
+        return b.date - a.date || a.index - b.index;
+      });
+      let count = 0;
+      for (const row of sorted) {
+        const matches = row.text.includes(query) && (!tag.value || row.tags.includes(tag.value));
+        row.element.hidden = !matches;
+        if (matches) count++;
+      }
+      list.append(...sorted.map((row) => row.element));
+      list.hidden = count === 0;
+      results.textContent = locale === 'id' ? `${count} dari ${rows.length} tulisan` : `${count} of ${rows.length} posts`;
+      empty.hidden = count > 0;
+    }
+
+    search.addEventListener('input', update);
+    tag.addEventListener('change', update);
+    sort.addEventListener('change', update);
+    browser.querySelector<HTMLElement>('.post-controls')!.hidden = false;
+    results.hidden = false;
+    update();
+  }
+</script>
