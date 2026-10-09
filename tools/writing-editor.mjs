@@ -13,7 +13,7 @@ const html = await readFile(new URL('./writing-editor.html', import.meta.url));
 const host = '127.0.0.1';
 const maxRequestBytes = 12 * 1024 * 1024;
 const maxImageBytes = 8 * 1024 * 1024;
-const markdownRenderer = await createMarkdownProcessor({ remarkPlugins: [remarkImageSize] });
+const markdownRenderer = await createMarkdownProcessor({ remarkPlugins: [[remarkImageSize, { editorPreview: true }]] });
 
 const sendJson = (res, status, value) => {
   res.writeHead(status, {

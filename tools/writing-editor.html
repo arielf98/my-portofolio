@@ -164,7 +164,7 @@
           <h2 id="preview-heading">File yang akan disimpan</h2>
           <p id="pathPreview" class="path-preview"></p>
           <pre id="markdownPreview"></pre>
-          <iframe id="articlePreview" class="rendered-preview" title="Preview tulisan" sandbox hidden></iframe>
+          <iframe id="articlePreview" class="rendered-preview" title="Preview tulisan" sandbox="allow-scripts" hidden></iframe>
           <p class="footer-note">Setelah disimpan, file sudah berada di folder locale yang benar. Cek pratinjau situs, lalu push perubahan ke GitHub untuk menerbitkannya lewat GitHub Pages.</p>
         </aside>
       </div>
@@ -194,6 +194,7 @@
       let loadedPost = null;
       let slugWasEdited = false;
       let translationKeyWasEdited = false;
+      let previewChannel = null;
 
       const localDate = () => {
         const now = new Date();
@@ -206,6 +207,9 @@
       const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
       function articlePreviewDocument(result) {
+        const nonceBytes = crypto.getRandomValues(new Uint8Array(16));
+        const nonce = btoa(String.fromCharCode(...nonceBytes));
+        previewChannel = nonce;
         const rendered = new DOMParser().parseFromString(result.html, 'text/html');
         for (const image of rendered.querySelectorAll('img[src]')) {
           const match = image.getAttribute('src').match(/^\.\.\/images\/([a-z0-9][a-z0-9._-]*\.(?:png|jpe?g|webp))$/i);
@@ -223,7 +227,95 @@
         const cover = result.coverName
           ? `<figure class="article-cover"><img src="${origin}/api/image?name=${encodeURIComponent(result.coverName)}" alt="${escapeHtml(coverAlt.value)}"></figure>`
           : '';
-        return `<!doctype html><html lang="${escapeHtml(lang.value)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src ${origin} 'unsafe-inline'; img-src ${origin} blob:; font-src ${origin}; form-action 'none'; base-uri 'none'"><link rel="stylesheet" href="${origin}/api/site.css"><title>${escapeHtml(title.value)}</title></head><body><main id="main" class="reading-column"><article class="long-read"><header class="article-header"><p class="eyebrow">${lang.value === 'id' ? 'Tulisan' : 'Writing'}</p><h1 class="article-title">${escapeHtml(title.value)}</h1><p class="article-deck">${escapeHtml(description.value)}</p><div class="post-meta">${meta}</div></header>${cover}<div class="article-content">${rendered.body.innerHTML}</div></article></main></body></html>`;
+        const resizeScript = `<script nonce="${nonce}">
+          (() => {
+            const channel = ${JSON.stringify(nonce)};
+            const style = document.createElement("style");
+            style.textContent = ".editor-resize-wrapper{position:relative;display:block;max-width:100%;margin-inline:auto}.editor-resize-handle{position:absolute;right:-8px;bottom:-8px;z-index:2;width:22px;height:22px;padding:0;border:2px solid #fff;border-radius:50%;color:#fff;background:#bd4b13;box-shadow:0 1px 5px #0005;font:700 14px/18px system-ui;cursor:nwse-resize;touch-action:none}.editor-resize-wrapper:hover{outline:1px dashed #bd4b13}";
+            document.head.append(style);
+            for (const image of document.querySelectorAll(".article-content img[data-editor-resize='true']")) {
+              const setup = () => {
+                if (!image.naturalWidth || image.dataset.editorReady) return;
+                const rect = image.getBoundingClientRect();
+                if (!rect.width || !rect.height) { requestAnimationFrame(setup); return; }
+                const wrapper = document.createElement("span");
+                wrapper.className = "editor-resize-wrapper";
+                wrapper.style.width = rect.width + "px";
+                image.style.display = "block";
+                image.style.width = "100%";
+                image.style.height = "auto";
+                image.style.maxWidth = "100%";
+                image.style.maxHeight = "none";
+                image.style.margin = "0";
+                image.parentNode.insertBefore(wrapper, image);
+                wrapper.append(image);
+                const handle = document.createElement("button");
+                handle.type = "button";
+                handle.className = "editor-resize-handle";
+                handle.setAttribute("aria-label", "Tarik untuk mengubah ukuran gambar");
+                handle.textContent = "↘";
+                wrapper.append(handle);
+                image.dataset.editorReady = "true";
+                handle.addEventListener("pointerdown", (event) => {
+                  event.preventDefault();
+                  const startX = event.clientX;
+                  const startY = event.clientY;
+                  const startWidth = wrapper.getBoundingClientRect().width;
+                  const startHeight = image.getBoundingClientRect().height;
+                  const longestSide = Math.max(startWidth, startHeight);
+                  const minimumScale = 100 / longestSide;
+                  const maximumScale = 1600 / longestSide;
+                  let width = Math.round(startWidth);
+                  let height = Math.round(startHeight);
+                  handle.setPointerCapture(event.pointerId);
+                  const move = (moveEvent) => {
+                    const projection = ((moveEvent.clientX - startX) * startWidth + (moveEvent.clientY - startY) * startHeight) / (startWidth * startWidth + startHeight * startHeight);
+                    const scale = Math.min(maximumScale, Math.max(minimumScale, 1 + projection));
+                    width = Math.round(startWidth * scale);
+                    height = Math.round(startHeight * scale);
+                    wrapper.style.width = width + "px";
+                  };
+                  const finish = () => {
+                    handle.removeEventListener("pointermove", move);
+                    handle.removeEventListener("pointerup", finish);
+                    handle.removeEventListener("pointercancel", finish);
+                    if (Math.abs(width - startWidth) < 2 && Math.abs(height - startHeight) < 2) return;
+                    parent.postMessage({
+                      type: "preview-image-resize",
+                      channel,
+                      start: image.dataset.editorStart,
+                      end: image.dataset.editorEnd,
+                      width,
+                      height,
+                    }, "*");
+                  };
+                  handle.addEventListener("pointermove", move);
+                  handle.addEventListener("pointerup", finish, { once: true });
+                  handle.addEventListener("pointercancel", finish, { once: true });
+                });
+              };
+              if (image.complete) setup();
+              else image.addEventListener("load", setup, { once: true });
+            }
+          })();
+        </scr${'ipt'}>`;
+        return `<!doctype html><html lang="${escapeHtml(lang.value)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src ${origin} 'unsafe-inline'; img-src ${origin} blob:; font-src ${origin}; form-action 'none'; base-uri 'none'"><link rel="stylesheet" href="${origin}/api/site.css"><title>${escapeHtml(title.value)}</title></head><body><main id="main" class="reading-column"><article class="long-read"><header class="article-header"><p class="eyebrow">${lang.value === 'id' ? 'Tulisan' : 'Writing'}</p><h1 class="article-title">${escapeHtml(title.value)}</h1><p class="article-deck">${escapeHtml(description.value)}</p><div class="post-meta">${meta}</div></header>${cover}<div class="article-content">${rendered.body.innerHTML}</div></article></main>${resizeScript}</body></html>`;
+      }
+
+      async function renderArticlePreview() {
+        previewChannel = null;
+        const response = await fetch('/api/preview', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            lang: lang.value, title: title.value, description: description.value,
+            pubDate: pubDate.value, updatedDate: updatedDate.value, tags: getTags(),
+            cover: coverPath.value, coverAlt: coverAlt.value, body: body.value,
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Preview tulisan gagal dibuat.');
+        previewFrame.srcdoc = articlePreviewDocument(result);
       }
 
       function markdownOutput() {
@@ -244,6 +336,7 @@
       }
 
       function showMarkdownSource() {
+        previewChannel = null;
         previewFrame.srcdoc = '';
         previewFrame.hidden = true;
         preview.hidden = false;
@@ -423,6 +516,27 @@
         updatePreview();
       }
 
+      function savePreviewImageSize(start, end, width, height) {
+        if (![start, end, width, height].every(Number.isSafeInteger) || start < 0 || end <= start || end > body.value.length || width < 1 || height < 1 || width > 1600 || height > 1600) {
+          throw new Error('Ukuran gambar tidak valid. Perbarui preview lalu coba lagi.');
+        }
+        const image = body.value.slice(start, end);
+        const opening = image.match(/^!\[(?:\\.|[^\]])*\]\(/s);
+        if (!opening || !image.endsWith(')')) throw new Error('Gambar ini tidak bisa diubah dari preview.');
+        const content = image.slice(opening[0].length, -1);
+        const title = content.match(/\s+(?:"(?:\\.|[^"])*"|'(?:\\.|[^'])*'|\((?:\\.|[^)])*\))$/);
+        let destination = title ? content.slice(0, title.index) : content.trimEnd();
+        if (title) {
+          const marker = title[0].trim().slice(1, -1);
+          if (!/^(?:max|size)=\d+x\d+$|^width=(?:50|75|100)%$/.test(marker)) {
+            throw new Error('Gambar dengan judul khusus belum bisa diubah dari preview.');
+          }
+        }
+        if (!destination.trim()) throw new Error('Sumber gambar tidak ditemukan di Markdown.');
+        body.setRangeText(`${opening[0]}${destination} "size=${width}x${height}")`, start, end, 'preserve');
+        updatePreview();
+      }
+
       title.addEventListener('input', () => {
         if (!slugWasEdited && !loadedPost) slug.value = toSlug(title.value);
         if (!translationKeyWasEdited && !loadedPost) translationKey.value = slug.value;
@@ -434,10 +548,23 @@
         updatePreview();
       });
       translationKey.addEventListener('input', () => { translationKeyWasEdited = true; updatePreview(); });
-      for (const element of [lang, description, pubDate, updatedDate, tags, translationKey, draft, coverPath, coverAlt, body]) {
+      for (const element of [lang, description, pubDate, updatedDate, tags, translationKey, draft, coverPath, coverAlt]) {
         element.addEventListener('input', updatePreview);
         element.addEventListener('change', updatePreview);
       }
+      body.addEventListener('input', () => { previewChannel = null; updatePreview(); });
+      body.addEventListener('change', () => { previewChannel = null; updatePreview(); });
+
+      window.addEventListener('message', async (event) => {
+        const message = event.data;
+        if (event.source !== previewFrame.contentWindow || event.origin !== 'null' || !message || message.type !== 'preview-image-resize' || message.channel !== previewChannel) return;
+        previewChannel = null;
+        try {
+          savePreviewImageSize(Number(message.start), Number(message.end), Number(message.width), Number(message.height));
+          setStatus(`Ukuran gambar diubah menjadi ${message.width} × ${message.height} px dan diperbarui di Markdown.`);
+          await renderArticlePreview();
+        } catch (err) { setStatus(err.message, true); }
+      });
       lang.addEventListener('change', async () => {
         loadedPost = null;
         showMarkdownSource();
@@ -510,25 +637,14 @@
         const button = $('#showPreview');
         button.disabled = true;
         try {
-          const response = await fetch('/api/preview', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({
-              lang: lang.value, title: title.value, description: description.value,
-              pubDate: pubDate.value, updatedDate: updatedDate.value, tags: getTags(),
-              cover: coverPath.value, coverAlt: coverAlt.value, body: body.value,
-            }),
-          });
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.error || 'Preview tulisan gagal dibuat.');
-          previewFrame.srcdoc = articlePreviewDocument(result);
+          await renderArticlePreview();
           preview.hidden = true;
           previewFrame.hidden = false;
           pathPreview.hidden = true;
           previewHeading.textContent = 'Preview tulisan';
           button.textContent = 'Perbarui preview';
           $('#showMarkdown').hidden = false;
-          setStatus('Preview siap. Klik Perbarui preview setelah mengubah tulisan.');
+          setStatus('Preview siap. Tarik pegangan di pojok gambar untuk mengubah ukurannya. Klik Perbarui preview setelah mengubah tulisan.');
           if (window.matchMedia('(max-width: 800px)').matches) previewFrame.scrollIntoView({ block: 'nearest' });
         } catch (err) { setStatus(err.message, true); }
         finally { button.disabled = false; }
