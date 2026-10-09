@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { access, lstat, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { access, lstat, mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { basename, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,6 +51,10 @@ function validateSlug(slug) {
     throw error(400, 'Slug must use lowercase letters, numbers, and hyphens.');
   }
   return slug;
+}
+
+function imageNames(markdown) {
+  return [...markdown.matchAll(/\.\.\/images\/([a-z0-9][a-z0-9._-]*\.(?:png|jpe?g|webp))/gi)].map(([, name]) => name);
 }
 
 function textField(value, label, maxLength, required = false) {
@@ -168,6 +172,46 @@ async function savePost(data) {
   return `src/content/blog/${lang}/${slug}.md`;
 }
 
+async function deletePost(data) {
+  const lang = data.lang;
+  const slug = validateSlug(data.slug);
+  const directory = localeDirectory(lang);
+  const target = join(directory, `${slug}.md`);
+  let info;
+  try { info = await lstat(target); } catch (err) {
+    if (err.code === 'ENOENT') throw error(404, 'Article not found.');
+    throw err;
+  }
+  if (info.isSymbolicLink() || !info.isFile()) throw error(400, 'The target must be a regular Markdown file.');
+
+  const markdown = await readFile(target, 'utf8');
+  const candidates = new Set(imageNames(markdown));
+  const referencedElsewhere = new Set();
+  for (const locale of ['en', 'id']) {
+    const files = await readdir(join(blogRoot, locale), { withFileTypes: true });
+    for (const file of files) {
+      if (!file.isFile() || !file.name.endsWith('.md') || (locale === lang && file.name === `${slug}.md`)) continue;
+      for (const name of imageNames(await readFile(join(blogRoot, locale, file.name), 'utf8'))) {
+        referencedElsewhere.add(name.toLowerCase());
+      }
+    }
+  }
+
+  await unlink(target);
+  const cleanupErrors = [];
+  for (const name of candidates) {
+    if (referencedElsewhere.has(name.toLowerCase())) continue;
+    try {
+      const image = join(imagesRoot, name);
+      const imageInfo = await lstat(image);
+      if (!imageInfo.isSymbolicLink() && imageInfo.isFile()) await unlink(image);
+    } catch (err) {
+      if (err.code !== 'ENOENT') cleanupErrors.push(name);
+    }
+  }
+  return { path: `src/content/blog/${lang}/${slug}.md`, cleanupErrors };
+}
+
 async function saveImage(data) {
   if (typeof data.dataUrl !== 'string' || data.dataUrl.length > maxRequestBytes) throw error(400, 'Choose an image under 8 MB.');
   const match = data.dataUrl.match(/^data:image\/(png|jpeg|webp);base64,([a-z\d+/]+=*)$/i);
@@ -228,13 +272,15 @@ const server = createServer(async (req, res) => {
       res.end(bytes);
       return;
     }
-    if (req.method === 'POST' && ['/api/save', '/api/image', '/api/preview'].includes(requestUrl.pathname)) {
+    if (req.method === 'POST' && ['/api/save', '/api/delete', '/api/image', '/api/preview'].includes(requestUrl.pathname)) {
       const expectedOrigin = `http://${req.headers.host}`;
       if (req.headers.origin !== expectedOrigin) throw error(403, 'Requests must come from this local editor.');
       const data = await readJson(req);
       if (requestUrl.pathname === '/api/save') {
         const path = await savePost(data);
         sendJson(res, 200, { path });
+      } else if (requestUrl.pathname === '/api/delete') {
+        sendJson(res, 200, await deletePost(data));
       } else if (requestUrl.pathname === '/api/preview') {
         sendJson(res, 200, await renderPreview(data));
       } else {

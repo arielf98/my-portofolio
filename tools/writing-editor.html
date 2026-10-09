@@ -73,6 +73,7 @@
               <select id="existingPost"><option value="">Buat tulisan baru</option></select>
             </div>
             <button id="loadPost" type="button">Muat untuk diedit</button>
+            <button id="deletePost" type="button" disabled>Hapus artikel</button>
             <button id="newPost" type="button">Artikel baru</button>
           </div>
           <form id="postForm">
@@ -191,6 +192,7 @@
       const pathPreview = $('#pathPreview');
       const status = $('#status');
       const existingPost = $('#existingPost');
+      const deletePostButton = $('#deletePost');
       let loadedPost = null;
       let slugWasEdited = false;
       let translationKeyWasEdited = false;
@@ -351,6 +353,10 @@
         status.classList.toggle('error', isError);
       }
 
+      function updateDeleteButton() {
+        deletePostButton.disabled = !loadedPost || loadedPost.lang !== lang.value || loadedPost.slug !== existingPost.value;
+      }
+
       async function refreshPosts() {
         const response = await fetch(`/api/posts?lang=${encodeURIComponent(lang.value)}`);
         if (!response.ok) throw new Error('Daftar tulisan tidak dapat dimuat.');
@@ -426,6 +432,7 @@
         coverAlt.value = article.coverAlt;
         body.value = article.body;
         loadedPost = { lang: lang.value, slug: postSlug };
+        updateDeleteButton();
         slugWasEdited = true;
         translationKeyWasEdited = true;
         showCoverPreview();
@@ -447,6 +454,7 @@
         $('#inlineFile').value = '';
         existingPost.value = '';
         loadedPost = null;
+        updateDeleteButton();
         slugWasEdited = false;
         translationKeyWasEdited = false;
         $('#savePost').textContent = 'Simpan langsung ke proyek';
@@ -567,6 +575,7 @@
       });
       lang.addEventListener('change', async () => {
         loadedPost = null;
+        updateDeleteButton();
         showMarkdownSource();
         slugWasEdited = false;
         $('#savePost').textContent = 'Simpan langsung ke proyek';
@@ -574,7 +583,31 @@
         updatePreview();
       });
       $('#loadPost').addEventListener('click', () => loadPost().catch((err) => setStatus(err.message, true)));
+      existingPost.addEventListener('change', updateDeleteButton);
       $('#newPost').addEventListener('click', resetEditor);
+      deletePostButton.addEventListener('click', async () => {
+        if (!loadedPost || loadedPost.lang !== lang.value || loadedPost.slug !== existingPost.value) return;
+        const target = { ...loadedPost };
+        const selectedTitle = existingPost.selectedOptions[0]?.textContent || target.slug;
+        if (!confirm(`Hapus artikel "${selectedTitle}"? File ini tidak bisa dipulihkan dari editor. Foto yang masih dipakai artikel lain akan disimpan. Lanjutkan?`)) return;
+        deletePostButton.disabled = true;
+        try {
+          const response = await fetch('/api/delete', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(target),
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Artikel gagal dihapus.');
+          resetEditor();
+          await refreshPosts();
+          const cleanupMessage = result.cleanupErrors?.length
+            ? ` Beberapa foto tidak dapat dibersihkan: ${result.cleanupErrors.join(', ')}.`
+            : '';
+          setStatus(`Artikel ${result.path} dihapus.${cleanupMessage}`, Boolean(cleanupMessage));
+        } catch (err) { setStatus(err.message, true); }
+        finally { updateDeleteButton(); }
+      });
       $('#uploadCover').addEventListener('click', async () => {
         try {
           const result = await uploadImage($('#coverFile').files[0], 'cover');
@@ -683,6 +716,7 @@
           $('#savePost').textContent = 'Simpan perubahan';
           await refreshPosts();
           existingPost.value = payload.slug;
+          updateDeleteButton();
           setStatus(`Tersimpan langsung ke ${result.path}. Sekarang kamu tinggal push perubahan ke GitHub.`);
         } catch (err) { setStatus(err.message, true); }
         finally { button.disabled = false; }
