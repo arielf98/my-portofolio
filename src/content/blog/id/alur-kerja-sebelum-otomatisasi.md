@@ -5,8 +5,8 @@ pubDate: 2026-10-09
 lang: id
 translationKey: workflow-before-automation
 tags: [Rekayasa, Produk, Alur Kerja]
-cover: ../images/workflow-cover.png
-coverAlt: "Meja kerja yang terkena cahaya matahari, dengan buku catatan dan laptop berisi sketsa alur kerja."
+cover: ../images/workflow-cover-v2.png
+coverAlt: "Seseorang memetakan alur kerja sederhana dengan cabang pengecualian di buku catatan di samping laptop."
 ---
 
 Otomatisasi sering terasa seperti solusi paling jelas ketika sebuah tugas terus berulang. Namun, memindahkan proses yang membingungkan ke dalam software hanya bisa membuat kebingungan itu terjadi lebih cepat. Sebelum memilih alat atau membuat halaman baru, ajukan pertanyaan yang lebih sederhana: apa yang dibutuhkan seseorang agar tugas ini selesai?

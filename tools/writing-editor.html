@@ -41,7 +41,6 @@
       .upload-row { align-items:center; }
       .upload-row input[type="file"] { max-width:250px; padding:.35rem; font-size:.78rem; }
       .upload-block { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--line); }
-      .inline-size { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); max-width:320px; gap:.75rem; margin-top:.75rem; }
       .preview-cover { display:none; width:min(100%,360px); max-height:220px; margin-top:.75rem; border-radius:4px; object-fit:cover; }
       .checkline { display:flex; align-items:center; gap:.5rem; padding:.4rem 0; }
       .preview-panel { position:sticky; top:1rem; }
@@ -117,7 +116,7 @@
                   <input id="coverFile" type="file" accept="image/png,image/jpeg,image/webp" />
                   <button id="uploadCover" type="button">Simpan foto cover ke proyek</button>
                 </div>
-                <p class="hint">PNG, JPG, atau WebP · file asli hingga 20 MB. Otomatis diubah ke WebP dengan sisi terpanjang 1600 px; JPEG dipakai jika browser tidak mendukung WebP.</p>
+                <p class="hint">PNG, JPG, atau WebP hingga 20 MB. Foto dipotong dari tengah ke rasio 3:2 (1536×1024), lalu disimpan sebagai WebP atau JPEG.</p>
                 <input id="coverPath" name="coverPath" placeholder="Path foto akan muncul setelah diunggah" />
                 <input id="coverAlt" name="coverAlt" maxlength="240" placeholder="Deskripsi singkat foto (alt text)" />
                 <img id="coverPreview" class="preview-cover" alt="Pratinjau foto cover" />
@@ -138,17 +137,7 @@
                     <input id="inlineFile" type="file" accept="image/png,image/jpeg,image/webp" />
                     <button id="insertPhoto" type="button">Unggah & sisipkan</button>
                   </div>
-                  <div class="inline-size">
-                    <div class="field">
-                      <label for="inlineWidth">Lebar maksimal (px)</label>
-                      <input id="inlineWidth" type="number" min="100" max="1600" step="1" value="680" required />
-                    </div>
-                    <div class="field">
-                      <label for="inlineHeight">Tinggi maksimal (px)</label>
-                      <input id="inlineHeight" type="number" min="100" max="1600" step="1" value="1000" required />
-                    </div>
-                    <p class="hint" style="grid-column:1/-1;margin:0">Gambar tetap utuh dan tidak melewati batas ukuran.</p>
-                  </div>
+                  <p class="hint">Foto dipotong dari tengah ke rasio 3:2 (1536×1024); bagian tepi dapat terpotong.</p>
                 </div>
               </div>
             </div>
@@ -165,7 +154,7 @@
           <h2 id="preview-heading">File yang akan disimpan</h2>
           <p id="pathPreview" class="path-preview"></p>
           <pre id="markdownPreview"></pre>
-          <iframe id="articlePreview" class="rendered-preview" title="Preview tulisan" sandbox="allow-scripts" hidden></iframe>
+          <iframe id="articlePreview" class="rendered-preview" title="Preview tulisan" sandbox hidden></iframe>
           <p class="footer-note">Setelah disimpan, file sudah berada di folder locale yang benar. Cek pratinjau situs, lalu push perubahan ke GitHub untuk menerbitkannya lewat GitHub Pages.</p>
         </aside>
       </div>

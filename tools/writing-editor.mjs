@@ -13,7 +13,7 @@ const html = await readFile(new URL('./writing-editor.html', import.meta.url));
 const host = '127.0.0.1';
 const maxRequestBytes = 12 * 1024 * 1024;
 const maxImageBytes = 8 * 1024 * 1024;
-const markdownRenderer = await createMarkdownProcessor({ remarkPlugins: [[remarkImageSize, { editorPreview: true }]] });
+const markdownRenderer = await createMarkdownProcessor({ remarkPlugins: [remarkImageSize] });
 
 const sendJson = (res, status, value) => {
   res.writeHead(status, {
@@ -173,9 +173,10 @@ async function savePost(data) {
 }
 
 async function deletePost(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw error(400, 'Invalid delete request.');
   const lang = data.lang;
-  const slug = validateSlug(data.slug);
   const directory = localeDirectory(lang);
+  const slug = validateSlug(data.slug);
   const target = join(directory, `${slug}.md`);
   let info;
   try { info = await lstat(target); } catch (err) {

@@ -5,8 +5,8 @@ pubDate: 2026-10-09
 lang: en
 translationKey: workflow-before-automation
 tags: [Engineering, Product, Workflows]
-cover: ../images/workflow-cover.png
-coverAlt: "A sunlit desk with a notebook and laptop showing a workflow sketch."
+cover: ../images/workflow-cover-v2.png
+coverAlt: "A hand maps a simple workflow with an exception branch in an open notebook beside a laptop."
 ---
 
 Automation can seem like the obvious fix when a task repeats. But moving a confusing process into software may only make the confusion happen faster. Before choosing a tool or building a screen, ask a simpler question: what does someone need in order to finish this task?

@@ -1,27 +1,10 @@
-export default function remarkImageSize({ editorPreview = false } = {}) {
-  return (tree, file) => {
-    const markdown = String(file?.value ?? '');
+export default function remarkImageSize() {
+  return (tree) => {
     function visit(node) {
       const dimensions = node.type === 'image' && node.title?.match(/^(max|size)=(\d+)x(\d+)$/);
       const width = dimensions && Number(dimensions[2]);
       const height = dimensions && Number(dimensions[3]);
       const legacyWidth = node.type === 'image' && node.title?.match(/^width=(50|75|100)%$/)?.[1];
-      if (editorPreview && node.type === 'image') {
-        const start = node.position?.start.offset;
-        const end = node.position?.end.offset;
-        const source = Number.isInteger(start) && Number.isInteger(end) ? markdown.slice(start, end) : '';
-        const inlineImage = /^!\[(?:\\.|[^\]])*\]\([\s\S]*\)$/.test(source);
-        const knownTitle = !node.title || /^(?:max|size)=\d+x\d+$|^width=(?:50|75|100)%$/.test(node.title);
-        if (inlineImage && knownTitle) {
-          node.data ??= {};
-          node.data.hProperties = {
-            ...node.data.hProperties,
-            'data-editor-resize': 'true',
-            'data-editor-start': String(start),
-            'data-editor-end': String(end),
-          };
-        }
-      }
       if (dimensions && width >= (dimensions[1] === 'max' ? 100 : 1) && width <= 1600 && height >= (dimensions[1] === 'max' ? 100 : 1) && height <= 1600) {
         node.data ??= {};
         node.data.hProperties = {
