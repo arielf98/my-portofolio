@@ -36,7 +36,7 @@ Editor lokal tersedia supaya artikel bisa ditulis tanpa layanan online. Jalankan
 npm run editor
 ```
 
-Buka alamat lokal yang muncul di terminal. Editor hanya berjalan di komputer ini dan tidak memuat layanan online. Pilih tulisan yang ada untuk mengeditnya, atau buat tulisan baru; tombol simpan menulis langsung ke `src/content/blog/en/` atau `src/content/blog/id/`. Foto PNG, JPG, atau WebP hingga 20 MB otomatis diperkecil dengan sisi terpanjang maksimal 1600 px dan disimpan sebagai WebP (JPEG fallback bila browser tidak mendukung encoding WebP) di `src/content/blog/images/`. Setelah menyimpan, jalankan `npm run dev` untuk melihat hasilnya, lalu push perubahan ke GitHub untuk menerbitkan situs. Tekan `Ctrl+C` di terminal untuk menghentikan editor.
+Buka alamat lokal yang muncul di terminal. Editor hanya berjalan di komputer ini dan tidak memuat layanan online. Pilih tulisan yang ada untuk mengeditnya, atau buat tulisan baru; tombol simpan menulis langsung ke `src/content/blog/en/` atau `src/content/blog/id/`. Foto PNG, JPG, atau WebP hingga 20 MB otomatis dipotong dari tengah ke rasio 3:2 (1536×1024) dan disimpan sebagai WebP (JPEG fallback bila browser tidak mendukung encoding WebP) di `src/content/blog/images/`. Setelah menyimpan, jalankan `npm run dev` untuk melihat hasilnya, lalu push perubahan ke GitHub untuk menerbitkan situs. Tekan `Ctrl+C` di terminal untuk menghentikan editor.
 
 Untuk menghapus artikel, muat tulisan tersebut di editor lalu pilih **Hapus artikel**. Foto ikut dihapus hanya jika tidak lagi dipakai artikel lain.
 
