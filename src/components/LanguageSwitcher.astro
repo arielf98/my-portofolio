@@ -1,0 +1,14 @@
+---
+interface Props {
+  locale: 'id' | 'en';
+  targetHref: string;
+}
+
+const { locale, targetHref } = Astro.props;
+---
+
+<nav class="language-switcher" aria-label={locale === 'id' ? 'Pilih bahasa' : 'Choose language'}>
+  {locale === 'en' ? <span lang="en" aria-current="true">EN</span> : <a href={targetHref} lang="en">EN</a>}
+  <span class="divider" aria-hidden="true">/</span>
+  {locale === 'id' ? <span lang="id" aria-current="true">ID</span> : <a href={targetHref} lang="id">ID</a>}
+</nav>

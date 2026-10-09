@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import PostList from '../components/PostList.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { profileByLocale } from '../data/profile';
+
+const locale = 'en';
+const profile = profileByLocale[locale];
+const pageTitle = [profile.name, profile.headline].filter(Boolean).join(' — ') || 'Portfolio';
+const description = profile.summary ?? '';
+const posts = (await getCollection('blog'))
+  .filter((post) => post.data.lang === locale && !post.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3)
+  .map((post) => ({
+    href: getRelativeLocaleUrl(locale, `blog/${post.id.split('/').at(-1)?.replace(/\.md$/, '')}`),
+    title: post.data.title,
+    description: post.data.description,
+    pubDate: post.data.pubDate,
+    tags: post.data.tags,
+  }));
+---
+
+<BaseLayout title={pageTitle} description={description} locale={locale} canonicalUrl={Astro.url.pathname}>
+  <SiteHeader locale={locale} currentPage="home" />
+  <main id="main" tabindex="-1">
+    <section class="home-intro">
+      <p class="eyebrow">Portfolio · Resume · Writing</p>
+      <h1>{profile.name ?? 'Portfolio'}</h1>
+      {profile.headline && <p class="headline">{profile.headline}</p>}
+      {profile.summary && <p class="lede">{profile.summary}</p>}
+      <div class="action-row">
+        <a class="button" href={getRelativeLocaleUrl(locale, 'resume')}>View resume</a>
+        <a class="button secondary" href={getRelativeLocaleUrl(locale, 'blog')}>Read writing</a>
+      </div>
+    </section>
+    <section class="home-intro section-block" aria-labelledby="latest-heading">
+      <div class="section-heading">
+        <h2 id="latest-heading">Latest writing</h2>
+        <a href={getRelativeLocaleUrl(locale, 'blog')}>All writing →</a>
+      </div>
+      {posts.length > 0
+        ? <PostList items={posts} locale={locale} />
+        : <p class="empty-state">Published writing will appear here.</p>}
+    </section>
+  </main>
+  <SiteFooter locale={locale} />
+</BaseLayout>

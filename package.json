@@ -1,0 +1,14 @@
+{
+  "name": "my-porto",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "editor": "node tools/writing-editor.mjs"
+  },
+  "dependencies": {
+    "astro": "^6.0.0"
+  }
+}

@@ -1,0 +1,35 @@
+---
+import '../styles/global.css';
+import { profileByLocale } from '../data/profile';
+
+interface Props {
+  title: string;
+  description: string;
+  locale: 'id' | 'en';
+  canonicalUrl: string;
+}
+
+const { title, description, locale, canonicalUrl } = Astro.props;
+const canonical = Astro.site ? new URL(canonicalUrl, Astro.site) : undefined;
+const profile = profileByLocale[locale];
+const sampleNotice = locale === 'id'
+  ? 'Data resume ini hanya contoh fiktif. Ganti dengan informasi Anda sebelum situs dipublikasikan.'
+  : 'This resume contains fictional sample data. Replace it with your information before publishing.';
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <title>{title}</title>
+    {canonical && <link rel="canonical" href={canonical} />}
+  </head>
+  <body>
+    {profile.isSample && <aside class="site-sample-banner" role="note">{sampleNotice}</aside>}
+    <slot />
+  </body>
+</html>

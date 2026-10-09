@@ -1,0 +1,49 @@
+---
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  locale: 'id' | 'en';
+  canonicalUrl: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  tags: string[];
+  languageHref: string;
+  cover?: ImageMetadata;
+  coverAlt?: string;
+}
+
+const { title, description, locale, canonicalUrl, pubDate, updatedDate, tags, languageHref, cover, coverAlt } = Astro.props;
+const isId = locale === 'id';
+const dateLocale = isId ? 'id-ID' : 'en-US';
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat(dateLocale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date);
+const archiveHref = getRelativeLocaleUrl(locale, 'blog');
+---
+
+<BaseLayout title={`${title} — ${isId ? 'Tulisan' : 'Writing'}`} description={description} locale={locale} canonicalUrl={canonicalUrl}>
+  <SiteHeader locale={locale} currentPage="blog" languageHref={languageHref} />
+  <main id="main" class="reading-column" tabindex="-1">
+    <article class="long-read">
+      <header class="article-header">
+        <p class="eyebrow"><a href={archiveHref}>{isId ? 'Tulisan' : 'Writing'}</a></p>
+        <h1 class="article-title">{title}</h1>
+        <p class="article-deck">{description}</p>
+        <div class="post-meta">
+          <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+          {updatedDate && <span>{isId ? 'Diperbarui' : 'Updated'} {formatDate(updatedDate)}</span>}
+          {tags.length > 0 && <span class="tag-list">{tags.map((tag) => <span class="tag">{tag}</span>)}</span>}
+        </div>
+      </header>
+      {cover && <figure class="article-cover"><Image src={cover} alt={coverAlt ?? ''} width={1200} format="webp" quality={82} /></figure>}
+      <div class="article-content"><slot /></div>
+    </article>
+  </main>
+  <SiteFooter locale={locale} />
+</BaseLayout>

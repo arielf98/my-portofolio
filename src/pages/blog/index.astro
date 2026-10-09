@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import PostList from '../../components/PostList.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { profileByLocale } from '../../data/profile';
+
+const locale = 'en';
+const profile = profileByLocale[locale];
+const posts = (await getCollection('blog'))
+  .filter((post) => post.data.lang === locale && !post.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .map((post) => ({
+    href: getRelativeLocaleUrl(locale, `blog/${post.id.split('/').at(-1)?.replace(/\.md$/, '')}`),
+    title: post.data.title,
+    description: post.data.description,
+    pubDate: post.data.pubDate,
+    tags: post.data.tags,
+    cover: post.data.cover,
+    coverAlt: post.data.coverAlt,
+  }));
+---
+
+<BaseLayout title={`Writing — ${profile.name ?? 'Your Name'}`} description="Writing about work, products, and things I am learning." locale={locale} canonicalUrl={Astro.url.pathname}>
+  <SiteHeader locale={locale} currentPage="blog" />
+  <main id="main" class="archive-page" tabindex="-1">
+    <header class="page-intro">
+      <p class="eyebrow">Publication</p>
+      <h1 class="page-title">Writing</h1>
+      <p>Notes about work, products, and things I am learning.</p>
+    </header>
+    {posts.length > 0 ? <PostList items={posts} locale={locale} /> : <p class="empty-state">No writing yet. Please check back later.</p>}
+  </main>
+  <SiteFooter locale={locale} />
+</BaseLayout>

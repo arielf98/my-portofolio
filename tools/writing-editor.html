@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline Writing Editor</title>
+    <style>
+      :root { color-scheme: light; --ink:#292a2b; --muted:#6d7072; --line:#e8e5e1; --paper:#fff; --soft:#f7f5f2; --accent:#bd4b13; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--soft); color:var(--ink); font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+      header, main { width:min(100% - 2rem,1120px); margin-inline:auto; }
+      header { padding:2.5rem 0 1.5rem; }
+      .eyebrow { margin:0 0 .35rem; color:var(--accent); font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+      h1,h2 { font-family:Georgia,"Times New Roman",serif; font-weight:500; letter-spacing:-.03em; }
+      h1 { margin:0; font-size:clamp(2rem,5vw,3rem); line-height:1.1; }
+      header p:last-child { max-width:660px; margin:.75rem 0 0; color:var(--muted); }
+      .offline-badge { display:inline-flex; align-items:center; gap:.4rem; margin-top:1rem; padding:.25rem .6rem; border:1px solid #d9e8dc; border-radius:999px; color:#2f6a3d; background:#f3faf4; font-size:.75rem; font-weight:650; }
+      main { padding-bottom:3rem; }
+      .layout { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr); gap:1.25rem; align-items:start; }
+      .panel { min-width:0; padding:1.25rem; border:1px solid var(--line); border-radius:8px; background:var(--paper); box-shadow:0 2px 10px #28201808; }
+      .panel h2 { margin:0 0 1rem; font-size:1.4rem; }
+      .field-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.9rem; }
+      .field { display:grid; gap:.35rem; min-width:0; }
+      .field.full { grid-column:1/-1; }
+      label,.label { font-size:.82rem; font-weight:650; }
+      input,select,textarea { width:100%; border:1px solid #d9d6d1; border-radius:4px; padding:.65rem .7rem; color:var(--ink); background:#fff; font:inherit; }
+      input:focus,select:focus,textarea:focus,button:focus-visible { outline:2px solid #c85a27; outline-offset:2px; }
+      input[type="checkbox"] { width:auto; }
+      textarea { min-height:320px; resize:vertical; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.9rem; line-height:1.6; }
+      .hint,.muted { color:var(--muted); font-size:.78rem; }
+      .existing { display:flex; gap:.5rem; align-items:end; margin-bottom:1.25rem; padding-bottom:1.25rem; border-bottom:1px solid var(--line); }
+      .existing .field { flex:1; }
+      .actions,.toolbar,.upload-row { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; }
+      button { min-height:40px; border:1px solid #d9d6d1; border-radius:4px; padding:.5rem .8rem; color:var(--ink); background:white; font:inherit; font-size:.84rem; font-weight:650; cursor:pointer; }
+      button:hover { border-color:#bcb6ae; background:#faf9f7; }
+      button.primary { border-color:var(--accent); color:white; background:var(--accent); }
+      button.primary:hover { background:#9e3e0c; }
+      button:disabled { opacity:.55; cursor:wait; }
+      .toolbar { margin:.5rem 0; }
+      .toolbar button { min-height:32px; padding:.25rem .5rem; font-size:.78rem; }
+      .upload-row { align-items:center; }
+      .upload-row input[type="file"] { max-width:250px; padding:.35rem; font-size:.78rem; }
+      .upload-block { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--line); }
+      .preview-cover { display:none; width:min(100%,360px); max-height:220px; margin-top:.75rem; border-radius:4px; object-fit:cover; }
+      .checkline { display:flex; align-items:center; gap:.5rem; padding:.4rem 0; }
+      .preview-panel { position:sticky; top:1rem; }
+      .path-preview { overflow-wrap:anywhere; margin:-.5rem 0 1rem; color:var(--muted); font: .78rem/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
+      pre { max-height:65vh; overflow:auto; margin:0; padding:1rem; border:1px solid var(--line); border-radius:4px; color:#343434; background:#fbfaf8; white-space:pre-wrap; overflow-wrap:anywhere; font: .78rem/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; }
+      .status { min-height:1.6rem; margin:.85rem 0 0; color:#28703a; font-size:.85rem; }
+      .status.error { color:#a22d23; }
+      .footer-note { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--line); color:var(--muted); font-size:.78rem; }
+      @media(max-width:800px) { .layout { grid-template-columns:1fr; } .preview-panel { position:static; } pre { max-height:440px; } }
+      @media(max-width:520px) { header { padding-top:1.6rem; } .panel { padding:1rem; } .field-grid { grid-template-columns:1fr; } .field.full { grid-column:auto; } .existing { align-items:stretch; flex-direction:column; } .actions button { flex:1; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <p class="eyebrow">Personal publication · local tool</p>
+      <h1>Writing editor</h1>
+      <p>Tulis atau perbarui artikel di sini. Saat disimpan, file Markdown dan foto langsung masuk ke folder proyek yang dipakai Astro.</p>
+      <span class="offline-badge"><span aria-hidden="true">●</span> Hanya berjalan di komputer ini</span>
+    </header>
+    <main>
+      <div class="layout">
+        <section class="panel" aria-labelledby="editor-heading">
+          <h2 id="editor-heading">Editor artikel</h2>
+          <div class="existing">
+            <div class="field">
+              <label for="existingPost">Tulisan yang sudah ada</label>
+              <select id="existingPost"><option value="">Buat tulisan baru</option></select>
+            </div>
+            <button id="loadPost" type="button">Muat untuk diedit</button>
+            <button id="newPost" type="button">Artikel baru</button>
+          </div>
+          <form id="postForm">
+            <div class="field-grid">
+              <div class="field">
+                <label for="lang">Bahasa</label>
+                <select id="lang" name="lang"><option value="en">English</option><option value="id">Bahasa Indonesia</option></select>
+              </div>
+              <div class="field">
+                <label for="slug">Slug / nama file</label>
+                <input id="slug" name="slug" autocomplete="off" placeholder="judul-artikel" required />
+              </div>
+              <div class="field full">
+                <label for="title">Judul</label>
+                <input id="title" name="title" maxlength="160" required />
+              </div>
+              <div class="field full">
+                <label for="description">Subjudul / ringkasan</label>
+                <textarea id="description" name="description" rows="2" maxlength="300" required></textarea>
+              </div>
+              <div class="field">
+                <label for="pubDate">Tanggal publikasi</label>
+                <input id="pubDate" name="pubDate" type="date" required />
+              </div>
+              <div class="field">
+                <label for="updatedDate">Tanggal diperbarui <span class="muted">(opsional)</span></label>
+                <input id="updatedDate" name="updatedDate" type="date" />
+              </div>
+              <div class="field">
+                <label for="tags">Tag</label>
+                <input id="tags" name="tags" placeholder="Engineering, Product" />
+              </div>
+              <div class="field">
+                <label for="translationKey">Kunci terjemahan <span class="muted">(opsional)</span></label>
+                <input id="translationKey" name="translationKey" placeholder="judul-artikel" />
+              </div>
+              <label class="checkline field full"><input id="draft" name="draft" type="checkbox" /> Simpan sebagai draft (tidak tampil di Writing publik)</label>
+              <div class="field full upload-block">
+                <label for="coverFile">Foto cover</label>
+                <div class="upload-row">
+                  <input id="coverFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                  <button id="uploadCover" type="button">Simpan foto cover ke proyek</button>
+                </div>
+                <p class="hint">PNG, JPG, atau WebP · file asli hingga 20 MB. Otomatis diubah ke WebP dengan sisi terpanjang 1600 px; JPEG dipakai jika browser tidak mendukung WebP.</p>
+                <input id="coverPath" name="coverPath" placeholder="Path foto akan muncul setelah diunggah" />
+                <input id="coverAlt" name="coverAlt" maxlength="240" placeholder="Deskripsi singkat foto (alt text)" />
+                <img id="coverPreview" class="preview-cover" alt="Pratinjau foto cover" />
+              </div>
+              <div class="field full">
+                <label for="body">Isi tulisan <span class="muted">(Markdown)</span></label>
+                <div class="toolbar" aria-label="Format teks">
+                  <button type="button" data-prefix="## ">H2</button>
+                  <button type="button" data-wrap="**">Tebal</button>
+                  <button type="button" data-wrap="*">Miring</button>
+                  <button type="button" data-link="true">Tautan</button>
+                </div>
+                <textarea id="body" name="body" spellcheck="true" placeholder="Mulai menulis di sini…\n\nGunakan Markdown untuk heading, daftar, tautan, dan foto." required></textarea>
+                <div class="upload-block">
+                  <label for="inlineAlt">Foto di dalam tulisan</label>
+                  <div class="upload-row">
+                    <input id="inlineAlt" placeholder="Deskripsi foto" />
+                    <input id="inlineFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                    <button id="insertPhoto" type="button">Unggah & sisipkan</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="actions" style="margin-top:1rem">
+              <button class="primary" id="savePost" type="submit">Simpan langsung ke proyek</button>
+              <button id="copyMarkdown" type="button">Salin Markdown</button>
+            </div>
+            <p id="status" class="status" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+        <aside class="panel preview-panel" aria-labelledby="preview-heading">
+          <h2 id="preview-heading">File yang akan disimpan</h2>
+          <p id="pathPreview" class="path-preview"></p>
+          <pre id="markdownPreview"></pre>
+          <p class="footer-note">Setelah disimpan, file sudah berada di folder locale yang benar. Cek pratinjau situs, lalu push perubahan ke GitHub untuk menerbitkannya lewat GitHub Pages.</p>
+        </aside>
+      </div>
+    </main>
+    <script>
+      const $ = (selector) => document.querySelector(selector);
+      const form = $('#postForm');
+      const lang = $('#lang');
+      const title = $('#title');
+      const slug = $('#slug');
+      const description = $('#description');
+      const pubDate = $('#pubDate');
+      const updatedDate = $('#updatedDate');
+      const tags = $('#tags');
+      const translationKey = $('#translationKey');
+      const draft = $('#draft');
+      const coverPath = $('#coverPath');
+      const coverAlt = $('#coverAlt');
+      const coverPreview = $('#coverPreview');
+      const body = $('#body');
+      const preview = $('#markdownPreview');
+      const status = $('#status');
+      const existingPost = $('#existingPost');
+      let loadedPost = null;
+      let slugWasEdited = false;
+      let translationKeyWasEdited = false;
+
+      const localDate = () => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        return now.toISOString().slice(0, 10);
+      };
+      const toSlug = (value) => value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const yamlString = (value) => JSON.stringify(value);
+      const getTags = () => tags.value.split(',').map((tag) => tag.trim()).filter(Boolean);
+
+      function markdownOutput() {
+        const lines = ['---', `title: ${yamlString(title.value.trim())}`, `description: ${yamlString(description.value.trim())}`, `pubDate: ${pubDate.value}`];
+        if (updatedDate.value) lines.push(`updatedDate: ${updatedDate.value}`);
+        lines.push(`tags: ${JSON.stringify(getTags())}`, `lang: ${lang.value}`);
+        if (translationKey.value.trim()) lines.push(`translationKey: ${yamlString(translationKey.value.trim())}`);
+        if (coverPath.value.trim()) {
+          lines.push(`cover: ${coverPath.value.trim()}`, `coverAlt: ${yamlString(coverAlt.value.trim())}`);
+        }
+        if (draft.checked) lines.push('draft: true');
+        return `${lines.join('\n')}\n---\n\n${body.value.trim()}\n`;
+      }
+
+      function updatePreview() {
+        preview.textContent = markdownOutput();
+        pathPreview.textContent = `src/content/blog/${lang.value}/${slug.value || 'judul-artikel'}.md`;
+      }
+
+      function setStatus(message, isError = false) {
+        status.textContent = message;
+        status.classList.toggle('error', isError);
+      }
+
+      async function refreshPosts() {
+        const response = await fetch(`/api/posts?lang=${encodeURIComponent(lang.value)}`);
+        if (!response.ok) throw new Error('Daftar tulisan tidak dapat dimuat.');
+        const posts = await response.json();
+        existingPost.replaceChildren(new Option('Buat tulisan baru', ''));
+        for (const post of posts) existingPost.add(new Option(`${post.title || '(tanpa judul)'} · ${post.slug}`, post.slug));
+      }
+
+      function decodeScalar(value) {
+        const trimmed = value.trim();
+        if (trimmed.startsWith('"')) {
+          try { return JSON.parse(trimmed); } catch { return trimmed.slice(1, -1); }
+        }
+        if (trimmed.startsWith("'")) return trimmed.slice(1, -1).replace(/''/g, "'");
+        return trimmed;
+      }
+
+      function parseArticle(markdown) {
+        const match = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+        if (!match) throw new Error('Frontmatter artikel ini tidak dikenali oleh editor.');
+        const meta = {};
+        for (const line of match[1].split(/\r?\n/)) {
+          const pair = line.match(/^([a-zA-Z]+):\s*(.*)$/);
+          if (pair) meta[pair[1]] = pair[2];
+        }
+        let parsedTags = [];
+        if (meta.tags) {
+          try { parsedTags = JSON.parse(meta.tags); }
+          catch { parsedTags = meta.tags.replace(/^\[|\]$/g, '').split(',').map((tag) => decodeScalar(tag)).filter(Boolean); }
+        }
+        return {
+          title: decodeScalar(meta.title ?? ''),
+          description: decodeScalar(meta.description ?? ''),
+          pubDate: decodeScalar(meta.pubDate ?? ''),
+          updatedDate: decodeScalar(meta.updatedDate ?? ''),
+          tags: parsedTags,
+          lang: decodeScalar(meta.lang ?? lang.value),
+          translationKey: decodeScalar(meta.translationKey ?? ''),
+          cover: decodeScalar(meta.cover ?? ''),
+          coverAlt: decodeScalar(meta.coverAlt ?? ''),
+          draft: decodeScalar(meta.draft ?? '') === 'true',
+          body: match[2].trim(),
+        };
+      }
+
+      function showCoverPreview() {
+        const name = coverPath.value.split('/').pop();
+        if (!name) {
+          coverPreview.removeAttribute('src');
+          coverPreview.style.display = 'none';
+          return;
+        }
+        coverPreview.src = `/api/image?name=${encodeURIComponent(name)}`;
+        coverPreview.style.display = 'block';
+      }
+
+      async function loadPost() {
+        const postSlug = existingPost.value;
+        if (!postSlug) return setStatus('Pilih tulisan yang ingin diedit.', true);
+        const response = await fetch(`/api/post?lang=${encodeURIComponent(lang.value)}&slug=${encodeURIComponent(postSlug)}`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Tulisan gagal dimuat.');
+        const article = parseArticle(result.markdown);
+        title.value = article.title;
+        slug.value = postSlug;
+        description.value = article.description;
+        pubDate.value = article.pubDate;
+        updatedDate.value = article.updatedDate;
+        tags.value = article.tags.join(', ');
+        translationKey.value = article.translationKey;
+        draft.checked = article.draft;
+        coverPath.value = article.cover;
+        coverAlt.value = article.coverAlt;
+        body.value = article.body;
+        loadedPost = { lang: lang.value, slug: postSlug };
+        slugWasEdited = true;
+        translationKeyWasEdited = true;
+        showCoverPreview();
+        $('#savePost').textContent = 'Simpan perubahan';
+        updatePreview();
+        setStatus(`Tulisan dimuat dari src/content/blog/${lang.value}/${postSlug}.md.`);
+      }
+
+      function resetEditor() {
+        const selectedLang = lang.value;
+        form.reset();
+        lang.value = selectedLang;
+        pubDate.value = localDate();
+        coverPreview.removeAttribute('src');
+        coverPreview.style.display = 'none';
+        $('#coverFile').value = '';
+        $('#inlineFile').value = '';
+        existingPost.value = '';
+        loadedPost = null;
+        slugWasEdited = false;
+        translationKeyWasEdited = false;
+        $('#savePost').textContent = 'Simpan langsung ke proyek';
+        setStatus('Editor siap untuk artikel baru.');
+        updatePreview();
+      }
+
+      async function uploadImage(file, role) {
+        if (!file) throw new Error('Pilih foto terlebih dahulu.');
+        if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 20 * 1024 * 1024) {
+          throw new Error('Gunakan foto PNG, JPG, atau WebP berukuran maksimal 20 MB.');
+        }
+        let image;
+        if ('createImageBitmap' in window) {
+          image = await createImageBitmap(file);
+        } else {
+          const url = URL.createObjectURL(file);
+          try {
+            image = await new Promise((resolve, reject) => {
+              const element = new Image();
+              element.onload = () => resolve(element);
+              element.onerror = () => reject(new Error('Foto gagal dibaca.'));
+              element.src = url;
+            });
+          } finally { URL.revokeObjectURL(url); }
+        }
+        const scale = Math.min(1, 1600 / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Browser tidak dapat memproses foto.');
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const encode = (type) => new Promise((resolve) => canvas.toBlob(resolve, type, 0.82));
+        let blob = await encode('image/webp');
+        let mimeType = blob?.type === 'image/webp' ? 'image/webp' : 'image/jpeg';
+        if (mimeType === 'image/jpeg') {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.fillStyle = '#fff';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          blob = await encode('image/jpeg');
+        }
+        image.close?.();
+        if (!blob || blob.size > 8 * 1024 * 1024) throw new Error('Foto masih terlalu besar setelah dikompres. Coba gunakan foto lain yang lebih kecil.');
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('Foto gagal dibaca.'));
+          reader.readAsDataURL(blob);
+        });
+        const response = await fetch('/api/image', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ name: file.name, role, dataUrl }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Foto gagal disimpan.');
+        return { ...result, mimeType, size: blob.size };
+      }
+
+      function insertAtCursor(text) {
+        const start = body.selectionStart;
+        const end = body.selectionEnd;
+        body.setRangeText(text, start, end, 'end');
+        body.focus();
+        updatePreview();
+      }
+
+      title.addEventListener('input', () => {
+        if (!slugWasEdited && !loadedPost) slug.value = toSlug(title.value);
+        if (!translationKeyWasEdited && !loadedPost) translationKey.value = slug.value;
+        updatePreview();
+      });
+      slug.addEventListener('input', () => {
+        slugWasEdited = true;
+        if (!translationKeyWasEdited && !loadedPost) translationKey.value = slug.value;
+        updatePreview();
+      });
+      translationKey.addEventListener('input', () => { translationKeyWasEdited = true; updatePreview(); });
+      for (const element of [lang, description, pubDate, updatedDate, tags, translationKey, draft, coverPath, coverAlt, body]) {
+        element.addEventListener('input', updatePreview);
+        element.addEventListener('change', updatePreview);
+      }
+      lang.addEventListener('change', async () => {
+        loadedPost = null;
+        slugWasEdited = false;
+        $('#savePost').textContent = 'Simpan langsung ke proyek';
+        try { await refreshPosts(); } catch (err) { setStatus(err.message, true); }
+        updatePreview();
+      });
+      $('#loadPost').addEventListener('click', () => loadPost().catch((err) => setStatus(err.message, true)));
+      $('#newPost').addEventListener('click', resetEditor);
+      $('#uploadCover').addEventListener('click', async () => {
+        try {
+          const result = await uploadImage($('#coverFile').files[0], 'cover');
+          coverPath.value = result.path;
+          if (!coverAlt.value.trim()) coverAlt.value = $('#coverFile').files[0].name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+          showCoverPreview();
+          updatePreview();
+          setStatus(`Foto ${result.mimeType.slice(6).toUpperCase()} (${Math.round(result.size / 1024)} KB) tersimpan di src/content/blog/images/${result.filename}.`);
+        } catch (err) { setStatus(err.message, true); }
+      });
+      $('#insertPhoto').addEventListener('click', async () => {
+        try {
+          const result = await uploadImage($('#inlineFile').files[0], 'inline');
+          const alt = $('#inlineAlt').value.trim() || $('#inlineFile').files[0].name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+          insertAtCursor(`![${alt}](../images/${result.filename})\n\n`);
+          setStatus(`Foto ${result.mimeType.slice(6).toUpperCase()} (${Math.round(result.size / 1024)} KB) tersimpan dan Markdown-nya disisipkan ke isi tulisan.`);
+          $('#inlineFile').value = '';
+        } catch (err) { setStatus(err.message, true); }
+      });
+
+      document.querySelectorAll('[data-prefix]').forEach((button) => button.addEventListener('click', () => {
+        const start = body.selectionStart;
+        const end = body.selectionEnd;
+        const selection = body.value.slice(start, end) || 'Teks';
+        const prefix = button.dataset.prefix;
+        const lineStart = body.value.lastIndexOf('\n', start - 1) + 1;
+        body.setRangeText(`${prefix}${selection}`, lineStart, end, 'end');
+        updatePreview();
+      }));
+      document.querySelectorAll('[data-wrap]').forEach((button) => button.addEventListener('click', () => {
+        const start = body.selectionStart;
+        const end = body.selectionEnd;
+        const selection = body.value.slice(start, end) || 'teks';
+        const marker = button.dataset.wrap;
+        body.setRangeText(`${marker}${selection}${marker}`, start, end, 'end');
+        body.focus();
+        updatePreview();
+      }));
+      $('[data-link]').addEventListener('click', () => {
+        const start = body.selectionStart;
+        const end = body.selectionEnd;
+        const selection = body.value.slice(start, end) || 'teks tautan';
+        body.setRangeText(`[${selection}](https://)`, start, end, 'end');
+        body.focus();
+        updatePreview();
+      });
+
+      $('#copyMarkdown').addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(markdownOutput());
+          setStatus('Markdown disalin ke clipboard.');
+        } catch { setStatus('Clipboard tidak tersedia. Salin isi panel pratinjau secara manual.', true); }
+      });
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const button = $('#savePost');
+        button.disabled = true;
+        try {
+          const payload = {
+            lang: lang.value,
+            slug: slug.value.trim(),
+            title: title.value,
+            description: description.value,
+            pubDate: pubDate.value,
+            updatedDate: updatedDate.value,
+            tags: getTags(),
+            translationKey: translationKey.value.trim(),
+            draft: draft.checked,
+            cover: coverPath.value.trim(),
+            coverAlt: coverAlt.value,
+            body: body.value,
+            overwrite: loadedPost?.lang === lang.value && loadedPost?.slug === slug.value.trim(),
+          };
+          let response = await fetch('/api/save', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload) });
+          let result = await response.json();
+          if (response.status === 409 && confirm(`${result.error}\n\nGanti file yang sudah ada?`)) {
+            payload.overwrite = true;
+            response = await fetch('/api/save', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload) });
+            result = await response.json();
+          }
+          if (!response.ok) throw new Error(result.error || 'Artikel gagal disimpan.');
+          loadedPost = { lang: lang.value, slug: payload.slug };
+          slugWasEdited = true;
+          $('#savePost').textContent = 'Simpan perubahan';
+          await refreshPosts();
+          existingPost.value = payload.slug;
+          setStatus(`Tersimpan langsung ke ${result.path}. Sekarang kamu tinggal push perubahan ke GitHub.`);
+        } catch (err) { setStatus(err.message, true); }
+        finally { button.disabled = false; }
+      });
+
+      pubDate.value = localDate();
+      refreshPosts().catch((err) => setStatus(err.message, true));
+      updatePreview();
+    </script>
+  </body>
+</html>

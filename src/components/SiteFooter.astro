@@ -1,0 +1,13 @@
+---
+import { profileByLocale } from '../data/profile';
+
+interface Props { locale: 'id' | 'en' }
+const { locale } = Astro.props;
+const year = new Date().getFullYear();
+const profile = profileByLocale[locale];
+---
+
+<footer class="site-footer">
+  <p>© {year}{profile.name ? ` ${profile.name}` : ''}</p>
+  <p>{locale === 'id' ? 'Dibuat dengan Astro' : 'Made with Astro'}</p>
+</footer>

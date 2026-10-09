@@ -1,0 +1,17 @@
+---
+import SiteFooter from '../../../components/SiteFooter.astro';
+import SiteHeader from '../../../components/SiteHeader.astro';
+import ResumeContent from '../../../components/ResumeContent.astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { profileByLocale } from '../../../data/profile';
+
+const locale = 'id';
+const profile = profileByLocale[locale];
+const pageTitle = profile.name ? `Resume — ${profile.name}` : 'Resume';
+---
+
+<BaseLayout title={pageTitle} description={profile.summary ?? ''} locale={locale} canonicalUrl={Astro.url.pathname}>
+  <SiteHeader locale={locale} currentPage="resume" />
+  <main id="main" class="resume-page" tabindex="-1"><ResumeContent profile={profile} locale={locale} /></main>
+  <SiteFooter locale={locale} />
+</BaseLayout>

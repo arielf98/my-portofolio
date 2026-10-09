@@ -1,0 +1,54 @@
+---
+import type { Profile, ResumeEntry } from '../data/profile';
+
+interface Props {
+  profile: Profile;
+  locale: 'id' | 'en';
+}
+
+const { profile, locale } = Astro.props;
+const isId = locale === 'id';
+const cvHref = profile.cvPdf && `${import.meta.env.BASE_URL}${profile.cvPdf.replace(/^\/+/, '')}`;
+const sections = [
+  { kind: 'entries' as const, id: 'experience', title: isId ? 'Pengalaman' : 'Experience', entries: profile.experience },
+  { kind: 'skills' as const, id: 'skills', title: isId ? 'Keahlian & teknologi' : 'Skills & technologies', skills: profile.skills },
+  { kind: 'entries' as const, id: 'projects', title: isId ? 'Proyek pilihan' : 'Selected projects', entries: profile.projects },
+  { kind: 'entries' as const, id: 'education', title: isId ? 'Pendidikan' : 'Education', entries: profile.education },
+  { kind: 'entries' as const, id: 'certifications', title: isId ? 'Sertifikasi' : 'Certifications', entries: profile.certifications },
+  { kind: 'entries' as const, id: 'awards', title: isId ? 'Penghargaan' : 'Awards', entries: profile.awards },
+].filter((section) => section.kind === 'skills' ? section.skills.length > 0 : section.entries.length > 0);
+
+---
+
+<header class="page-intro">
+  <p class="eyebrow">Resume</p>
+  <h1 class="page-title">{profile.name ?? 'Resume'}</h1>
+  {profile.headline && <p><strong>{profile.headline}</strong></p>}
+  {profile.location && <p class="entry-meta">{profile.location}</p>}
+  {profile.summary && <p>{profile.summary}</p>}
+</header>
+
+{sections.map((section) => (
+  <section class="resume-section" aria-labelledby={`${section.id}-heading`}>
+    <h2 id={`${section.id}-heading`}>{section.title}</h2>
+    {section.kind === 'skills'
+      ? <ul class="skills-list">{section.skills.map((skill) => <li>{skill}</li>)}</ul>
+      : section.entries.map((entry) => (
+        <article class="resume-entry">
+          <h3>{entry.title}</h3>
+          {(entry.organization || entry.startDate || entry.endDate) && (
+            <p class="entry-meta">{[entry.organization, [entry.startDate, entry.endDate].filter(Boolean).join(' – ')].filter(Boolean).join(' · ')}</p>
+          )}
+          {entry.description && <p>{entry.description}</p>}
+          {entry.highlights && <ul class="resume-highlights">{entry.highlights.map((highlight) => <li>{highlight}</li>)}</ul>}
+        </article>
+      ))}
+  </section>
+))}
+
+{(profile.email || profile.cvPdf) && (
+  <nav class="profile-links" aria-label={isId ? 'Kontak dan tautan profesional' : 'Contact and professional links'}>
+    {profile.email && <a href={`mailto:${profile.email}`}>Email</a>}
+    {cvHref && <a href={cvHref} download>{isId ? 'Unduh CV' : 'Download CV'}</a>}
+  </nav>
+)}

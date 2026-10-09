@@ -1,0 +1,47 @@
+---
+import { getCollection, render } from 'astro:content';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  for (const post of posts) {
+    const directoryLocale = post.id.split('/')[0];
+    if (directoryLocale !== post.data.lang) {
+      throw new Error(`Blog locale mismatch for ${post.id}: frontmatter says ${post.data.lang}, directory says ${directoryLocale}`);
+    }
+  }
+  return posts.filter((post) => !post.data.draft && post.data.lang === 'en').map((entry) => {
+    const slug = entry.id.split('/').at(-1)?.replace(/\.md$/, '') ?? entry.id;
+    const translated = entry.data.translationKey
+      ? posts.find((candidate) => candidate.data.lang === 'id' && candidate.data.translationKey === entry.data.translationKey && !candidate.data.draft)
+      : undefined;
+    const translatedSlug = translated?.id.split('/').at(-1)?.replace(/\.md$/, '');
+    return {
+      params: { slug },
+      props: {
+        entry,
+        languageHref: translatedSlug ? getRelativeLocaleUrl('id', `blog/${translatedSlug}`) : getRelativeLocaleUrl('id', 'blog'),
+      },
+    };
+  });
+}
+
+const { entry, languageHref } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<ArticleLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  locale="en"
+  canonicalUrl={Astro.url.pathname}
+  pubDate={entry.data.pubDate}
+  updatedDate={entry.data.updatedDate}
+  tags={entry.data.tags}
+  cover={entry.data.cover}
+  coverAlt={entry.data.coverAlt}
+  languageHref={languageHref}
+>
+  <Content />
+</ArticleLayout>

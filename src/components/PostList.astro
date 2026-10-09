@@ -1,0 +1,46 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface PostItem {
+  href: string;
+  title: string;
+  description: string;
+  pubDate: Date;
+  tags: string[];
+  cover?: ImageMetadata;
+  coverAlt?: string;
+}
+
+interface Props {
+  items: PostItem[];
+  locale: 'id' | 'en';
+}
+
+const { items, locale } = Astro.props;
+const dateLocale = locale === 'id' ? 'id-ID' : 'en-US';
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat(dateLocale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(date);
+---
+
+<ol class="post-list">
+  {items.map((item) => (
+    <li class="post-row">
+      <article>
+        <div class="post-copy">
+          <a href={item.href}><h2>{item.title}</h2></a>
+          <p>{item.description}</p>
+          <div class="post-meta">
+            <time datetime={item.pubDate.toISOString()}>{formatDate(item.pubDate)}</time>
+            {item.tags.length > 0 && (
+              <span class="tag-list" aria-label={locale === 'id' ? 'Tag' : 'Tags'}>
+                {item.tags.map((tag) => <span class="tag">{tag}</span>)}
+              </span>
+            )}
+          </div>
+        </div>
+        {item.cover && <div class="post-row-image"><Image src={item.cover} alt="" width={320} format="webp" quality={78} loading="lazy" /></div>}
+      </article>
+    </li>
+  ))}
+</ol>
