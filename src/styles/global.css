@@ -89,9 +89,10 @@ a:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 4px; }
 .contact-link { display: inline-flex; align-items: center; gap: 0.4rem; overflow-wrap: anywhere; text-decoration: none; }
 .contact-icon { width: 1rem; height: 1rem; flex: 0 0 auto; }
 .primary-nav a[aria-current="page"] { color: var(--accent-text); }
-.language-switcher { gap: 0.45rem; font-size: 0.75rem; font-weight: 650; }
-.language-switcher a { text-decoration: none; }
-.language-switcher a[aria-current="true"] { color: var(--muted); }
+.language-switcher { gap: 0.25rem; font-size: 0.75rem; font-weight: 650; }
+.language-switcher [lang] { display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; min-height: 2rem; padding: 0.25rem 0.5rem; border: 1px solid transparent; border-radius: 999px; text-decoration: none; }
+.language-switcher [aria-current="true"] { border-color: var(--accent-text); color: var(--paper); background: var(--accent-text); }
+.language-switcher a:hover { border-color: var(--rule); color: var(--accent-text); background: var(--surface); }
 .language-switcher .divider { color: #bbb; }
 
 main:focus { outline: none; }
