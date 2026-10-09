@@ -1,5 +1,7 @@
 # Portofolio
 
+🌐 [Akses Web CV](https://arielf98.github.io/my-portofolio/)
+
 Situs portofolio bilingual dan blog statis menggunakan Astro.
 
 English menjadi bahasa default di `/`, sedangkan Bahasa Indonesia tersedia di `/id/`.

@@ -41,7 +41,7 @@
       .upload-row { align-items:center; }
       .upload-row input[type="file"] { max-width:250px; padding:.35rem; font-size:.78rem; }
       .upload-block { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--line); }
-      .inline-size { max-width:240px; margin-top:.75rem; }
+      .inline-size { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); max-width:320px; gap:.75rem; margin-top:.75rem; }
       .preview-cover { display:none; width:min(100%,360px); max-height:220px; margin-top:.75rem; border-radius:4px; object-fit:cover; }
       .checkline { display:flex; align-items:center; gap:.5rem; padding:.4rem 0; }
       .preview-panel { position:sticky; top:1rem; }
@@ -137,13 +137,16 @@
                     <input id="inlineFile" type="file" accept="image/png,image/jpeg,image/webp" />
                     <button id="insertPhoto" type="button">Unggah & sisipkan</button>
                   </div>
-                  <div class="field inline-size">
-                    <label for="inlineSize">Ukuran gambar</label>
-                    <select id="inlineSize">
-                      <option value="100">Lebar penuh (100%)</option>
-                      <option value="75">Sedang (75%)</option>
-                      <option value="50">Kecil (50%)</option>
-                    </select>
+                  <div class="inline-size">
+                    <div class="field">
+                      <label for="inlineWidth">Lebar maksimal (px)</label>
+                      <input id="inlineWidth" type="number" min="100" max="1600" step="1" value="680" required />
+                    </div>
+                    <div class="field">
+                      <label for="inlineHeight">Tinggi maksimal (px)</label>
+                      <input id="inlineHeight" type="number" min="100" max="1600" step="1" value="1000" required />
+                    </div>
+                    <p class="hint" style="grid-column:1/-1;margin:0">Gambar tetap utuh dan tidak melewati batas ukuran.</p>
                   </div>
                 </div>
               </div>
@@ -457,11 +460,15 @@
       });
       $('#insertPhoto').addEventListener('click', async () => {
         try {
+          const widthInput = $('#inlineWidth');
+          const heightInput = $('#inlineHeight');
+          if (!widthInput.reportValidity() || !heightInput.reportValidity()) return;
           const result = await uploadImage($('#inlineFile').files[0], 'inline');
           const alt = $('#inlineAlt').value.trim() || $('#inlineFile').files[0].name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
-          const width = $('#inlineSize').value;
-          insertAtCursor(`![${alt}](../images/${result.filename} "width=${width}%")\n\n`);
-          setStatus(`Foto ${result.mimeType.slice(6).toUpperCase()} (${Math.round(result.size / 1024)} KB) tersimpan dan disisipkan dengan lebar ${width}%.`);
+          const width = widthInput.value;
+          const height = heightInput.value;
+          insertAtCursor(`![${alt}](../images/${result.filename} "max=${width}x${height}")\n\n`);
+          setStatus(`Foto ${result.mimeType.slice(6).toUpperCase()} (${Math.round(result.size / 1024)} KB) tersimpan dan disisipkan dengan batas ${width} × ${height} px.`);
           $('#inlineFile').value = '';
         } catch (err) { setStatus(err.message, true); }
       });
