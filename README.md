@@ -1,5 +1,7 @@
 # Portofolio Ariel Febrian
 
+**Bahasa Indonesia** | [English](README.en.md)
+
 Website resume dan artikel dalam Bahasa Indonesia dan Inggris, dengan editor lokal untuk menulis tanpa mengedit file secara manual.
 
 [Buka website](https://arielf98.github.io/my-portofolio/) | [Versi Bahasa Indonesia](https://arielf98.github.io/my-portofolio/id/)
