@@ -1,0 +1,53 @@
+---
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import { profileByLocale } from '../data/profile';
+
+const locale = 'en';
+const profile = profileByLocale[locale];
+---
+
+<BaseLayout
+  title={`Page not found | ${profile.name ?? 'Portfolio'}`}
+  description="This page could not be found. Return to the portfolio or explore the resume."
+  locale={locale}
+  canonicalUrl={getRelativeLocaleUrl(locale, '404')}
+  noIndex
+>
+  <SiteHeader locale={locale} currentPage="not-found" />
+  <main id="main" class="not-found" tabindex="-1" aria-labelledby="not-found-title">
+    <p class="error-code" aria-hidden="true">404</p>
+    <h1 id="not-found-title">Page not found</h1>
+    <p class="error-message">The page may have moved, or the link may be incorrect.<br />Let's get you back to somewhere familiar.</p>
+    <div class="error-actions">
+      <a class="button" href={getRelativeLocaleUrl(locale)}>Back to home</a>
+      <a class="button secondary" href={getRelativeLocaleUrl(locale, 'resume')}>View resume</a>
+    </div>
+    <a class="error-writing" href={getRelativeLocaleUrl(locale, 'blog')}>Explore writing</a>
+  </main>
+  <footer class="site-footer error-footer">
+    <p>&copy; {new Date().getFullYear()} {profile.name}</p>
+    <a href={getRelativeLocaleUrl('id', 'resume')} lang="id">Resume Bahasa Indonesia</a>
+  </footer>
+</BaseLayout>
+
+<style>
+  .not-found { display:flex; flex-direction:column; align-items:center; justify-content:center; width:min(100% - 48px,680px); min-height:calc(100dvh - 220px); margin:auto; padding:56px 0; text-align:center; }
+  .error-code { margin:0 0 16px; color:#bfbfbf; font:600 112px/1 var(--sans); letter-spacing:0; }
+  h1 { margin:0; color:var(--ink); font:700 32px/1.25 var(--sans); letter-spacing:0; overflow-wrap:anywhere; }
+  .error-message { margin:16px 0 0; color:var(--muted); font-size:15px; line-height:1.8; }
+  .error-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin-top:28px; }
+  .error-actions .button { min-height:40px; padding:9px 20px; }
+  .error-writing { margin-top:24px; color:var(--muted); font-size:14px; text-underline-offset:4px; }
+  .error-writing:hover { color:var(--accent-text); }
+  .error-footer { flex-wrap:wrap; gap:12px; font-size:12px; }
+  .error-footer a { color:var(--muted); text-underline-offset:3px; }
+  @media (max-width:480px) {
+    .not-found { width:calc(100% - 32px); padding:40px 0; }
+    .error-code { font-size:88px; }
+    h1 { font-size:26px; }
+    .error-message br { display:none; }
+    .error-actions { width:100%; }
+  }
+</style>

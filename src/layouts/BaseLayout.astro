@@ -7,10 +7,11 @@ interface Props {
   description: string;
   locale: 'id' | 'en';
   canonicalUrl: string;
+  noIndex?: boolean;
 }
 
-const { title, description, locale, canonicalUrl } = Astro.props;
-const canonical = Astro.site ? new URL(canonicalUrl, Astro.site) : undefined;
+const { title, description, locale, canonicalUrl, noIndex = false } = Astro.props;
+const canonical = !noIndex && Astro.site ? new URL(canonicalUrl, Astro.site) : undefined;
 const profile = profileByLocale[locale];
 const sampleNotice = locale === 'id'
   ? 'Data resume ini hanya contoh fiktif. Ganti dengan informasi Anda sebelum situs dipublikasikan.'
@@ -23,6 +24,7 @@ const sampleNotice = locale === 'id'
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    {noIndex && <meta name="robots" content="noindex, follow" />}
     <meta name="theme-color" content="#ffffff" />
     <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
     <title>{title}</title>

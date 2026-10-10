@@ -12,7 +12,7 @@
   --rule: #eee;
   --accent: #ff6719;
   --accent-text: #b84000;
-  --serif: Georgia, "Times New Roman", serif;
+  --serif: Georgia, serif;
   --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -70,10 +70,10 @@ a:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 4px; }
 }
 
 .wordmark {
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 1.4rem;
   font-weight: 700;
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
   text-decoration: none;
 }
 
@@ -111,10 +111,10 @@ main:focus { outline: none; }
 }
 .home-intro h1, .page-title {
   margin: 0.45rem 0 1rem;
-  font-family: var(--serif);
-  font-size: clamp(2.4rem, 6.5vw, 3.5rem);
-  font-weight: 500;
-  letter-spacing: -0.045em;
+  font-family: var(--sans);
+  font-size: 3.5rem;
+  font-weight: 700;
+  letter-spacing: 0;
   line-height: 1.08;
 }
 .home-intro .headline { margin: 0; font-size: 1.1rem; }
@@ -147,10 +147,10 @@ main:focus { outline: none; }
 }
 .section-heading h2, .resume-section h2 {
   margin: 0;
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 1.65rem;
-  font-weight: 500;
-  letter-spacing: -0.025em;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 .section-heading a { color: var(--accent-text); font-size: 0.875rem; text-decoration: none; }
 .empty-state { padding: 1.25rem 0; color: var(--muted); }
@@ -170,10 +170,10 @@ main:focus { outline: none; }
 .post-row-image img { display: block; width: 100%; height: 108px; border-radius: 3px; object-fit: cover; }
 .post-row h2, .post-row h3 {
   margin: 0;
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 1.45rem;
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: 0;
   line-height: 1.25;
 }
 .post-row p { margin: 0.45rem 0 0; color: #555; }
@@ -226,13 +226,13 @@ main:focus { outline: none; }
 .reading-column { width: min(100% - 3rem, 680px); margin-inline: auto; }
 .article-header { padding: clamp(3rem, 8vw, 5.5rem) 0 2rem; border-bottom: 1px solid var(--rule); }
 .article-header .eyebrow a { text-decoration: none; }
-.article-title { margin: 0.7rem 0 0.8rem; font-family: var(--serif); font-size: clamp(2rem, 6vw, 3rem); font-weight: 500; letter-spacing: -0.04em; line-height: 1.12; }
+.article-title { margin: 0.7rem 0 0.8rem; font-family: var(--sans); font-size: 3rem; font-weight: 700; letter-spacing: 0; line-height: 1.12; }
 .article-deck { margin: 0; color: #555; font-size: 1.1rem; }
 .article-header .post-meta { margin-top: 1.2rem; }
 .article-cover { margin: 1.5rem 0 0; }
 .article-cover img { display: block; width: 100%; height: auto; border-radius: 3px; }
 .article-content { padding: 1.5rem 0 4rem; font-family: var(--serif); font-size: 1.125rem; line-height: 1.75; }
-.article-content h2, .article-content h3 { margin-top: 2.2rem; font-family: var(--serif); font-weight: 500; letter-spacing: -0.02em; line-height: 1.25; }
+.article-content h2, .article-content h3 { margin-top: 2.2rem; font-family: var(--sans); font-weight: 600; letter-spacing: 0; line-height: 1.25; }
 .article-content h2 { font-size: 1.7rem; }
 .article-content h3 { font-size: 1.35rem; }
 .article-content a { color: var(--accent-text); }
@@ -256,6 +256,8 @@ main:focus { outline: none; }
   .language-switcher { align-self: flex-end; padding-right: 0.65rem; }
   .home-intro, .resume-page, .archive-page, .reading-column { width: min(100% - 2rem, 680px); }
   .home-intro { padding-top: 3rem; }
+  .home-intro h1, .page-title { font-size: 2.4rem; }
+  .article-title { font-size: 2rem; }
   .post-row article { align-items: flex-start; gap: 0.85rem; }
   .post-row-image { flex-basis: 96px; }
   .post-row-image img { height: 76px; }
