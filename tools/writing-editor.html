@@ -365,7 +365,7 @@
           <p id="pathPreview" class="path-preview" hidden></p>
           <p id="previewStatus" class="path-preview" role="status" aria-live="polite" hidden></p>
           <pre id="markdownPreview" tabindex="0" aria-label="Sumber Markdown" hidden></pre>
-          <iframe id="articlePreview" class="rendered-preview" title="Preview tulisan" sandbox></iframe>
+          <iframe id="articlePreview" class="rendered-preview" title="Preview tulisan" sandbox="allow-same-origin"></iframe>
           </div>
         </aside>
       </div>
@@ -468,8 +468,54 @@
         const result = await response.json();
         if (signal.aborted) return;
         if (!response.ok) throw new Error(result.error || 'Preview tulisan gagal dibuat.');
-        previewFrame.srcdoc = articlePreviewDocument(result);
+        const html = articlePreviewDocument(result);
+        const document = previewFrame.contentDocument;
+        const article = document?.querySelector('.long-read');
+        if (!article) {
+          previewFrame.srcdoc = html;
+          return;
+        }
+        const scroll = document.scrollingElement;
+        const top = scroll.scrollTop;
+        const atBottom = top > 0 && scroll.scrollHeight - scroll.clientHeight - top <= 8;
+        const rendered = new DOMParser().parseFromString(html, 'text/html');
+        const nextArticle = document.importNode(rendered.querySelector('.long-read'), true);
+        const images = [...article.querySelectorAll('img')];
+        for (const image of nextArticle.querySelectorAll('img')) {
+          const index = images.findIndex((previous) => previous.outerHTML === image.outerHTML);
+          if (index !== -1) image.replaceWith(images.splice(index, 1)[0]);
+        }
+        document.documentElement.lang = rendered.documentElement.lang;
+        document.title = rendered.title;
+        article.replaceWith(nextArticle);
+        scroll.scrollTop = atBottom ? scroll.scrollHeight : top;
+        if (window.document.activeElement === body) syncPreviewScroll();
       }
+
+      function syncPreviewScroll() {
+        const scroll = previewFrame.contentDocument?.scrollingElement;
+        if (!scroll || previewFrame.hidden) return;
+        const range = body.scrollHeight - body.clientHeight;
+        if (range <= 0) return;
+        // shortcut: Proportional sync; use source-line mapping if exact block alignment is needed.
+        scroll.scrollTop = Math.min(1, Math.max(0, body.scrollTop / range)) * Math.max(0, scroll.scrollHeight - scroll.clientHeight);
+      }
+
+      function resetPreviewScroll() {
+        body.scrollTop = 0;
+        const scroll = previewFrame.contentDocument?.scrollingElement;
+        if (scroll) scroll.scrollTop = 0;
+      }
+
+      body.addEventListener('scroll', syncPreviewScroll, { passive:true });
+      previewFrame.addEventListener('load', () => {
+        const document = previewFrame.contentDocument;
+        if (!document?.querySelector('.long-read')) return;
+        syncPreviewScroll();
+        document.addEventListener('load', () => {
+          if (window.document.activeElement === body) syncPreviewScroll();
+        }, true);
+      });
 
       function markdownOutput() {
         const lines = ['---', `title: ${yamlString(title.value.trim())}`, `description: ${yamlString(description.value.trim())}`, `pubDate: ${pubDate.value}`];
@@ -768,6 +814,7 @@
         coverPath.value = article.cover;
         coverAlt.value = article.coverAlt;
         body.value = article.body;
+        resetPreviewScroll();
         loadedPost = { lang: lang.value, slug: postSlug };
         updateDeleteButton();
         slugWasEdited = true;
@@ -782,6 +829,7 @@
       function resetEditor() {
         const selectedLang = lang.value;
         form.reset();
+        resetPreviewScroll();
         lang.value = selectedLang;
         pubDate.value = localDate();
         coverPreview.removeAttribute('src');
