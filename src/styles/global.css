@@ -12,7 +12,6 @@
   --rule: #eee;
   --accent: #ff6719;
   --accent-text: #b84000;
-  --serif: Georgia, serif;
   --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -231,7 +230,7 @@ main:focus { outline: none; }
 .article-header .post-meta { margin-top: 1.2rem; }
 .article-cover { margin: 1.5rem 0 0; }
 .article-cover img { display: block; width: 100%; height: auto; border-radius: 3px; }
-.article-content { padding: 1.5rem 0 4rem; font-family: var(--serif); font-size: 1.125rem; line-height: 1.75; }
+.article-content { padding: 1.5rem 0 4rem; font-family: var(--sans); font-size: 1.125rem; line-height: 1.75; }
 .article-content h2, .article-content h3 { margin-top: 2.2rem; font-family: var(--sans); font-weight: 600; letter-spacing: 0; line-height: 1.25; }
 .article-content h2 { font-size: 1.7rem; }
 .article-content h3 { font-size: 1.35rem; }

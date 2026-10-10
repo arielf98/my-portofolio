@@ -2,7 +2,7 @@
 
 ## Desain Web Publik
 
-Web publik (beranda, resume, tulisan, dan halaman error) mengikuti gaya Substack: layout editorial yang bersih, aksen warna web yang sudah ada, serta sans-serif untuk navigasi, judul, dan heading resume. Serif hanya digunakan untuk isi artikel panjang, bukan tampilan resume.
+Web publik (beranda, resume, tulisan, dan halaman error) mengikuti gaya Substack: layout editorial yang bersih, aksen warna web yang sudah ada, serta sans-serif untuk navigasi, judul, heading, dan isi artikel. Preview artikel di editor harus menggunakan CSS dan tipografi yang sama dengan web publik, bukan serif atau Times New Roman. Kode tetap menggunakan monospace.
 
 Ant Design v6 merupakan acuan editor, bukan desain global web publik. Jangan menerapkan perubahan style editor ke web publik kecuali pengguna meminta komponen web tersebut secara eksplisit. Tag artikel web tetap mengikuti gaya Ant Design v6 sesuai permintaan khusus pengguna.
 
