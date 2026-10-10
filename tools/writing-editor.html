@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Offline Writing Editor</title>
+    <title>Writing Editor</title>
     <style>
       :root {
         color-scheme:light;
@@ -24,16 +24,34 @@
       .app-header { border-bottom:1px solid var(--line); background:var(--paper); }
       .header-inner { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; width:min(100% - 48px,1248px); margin:auto; padding:20px 0; }
       .eyebrow { margin-bottom:4px; color:var(--muted); font-size:12px; }
-      .offline-badge,.tag { display:inline-flex; align-items:center; gap:6px; padding:0 7px; border:1px solid var(--border); border-radius:4px; font-size:12px; line-height:20px; background:#fafafa; }
+      .offline-badge { display:inline-flex; align-items:center; gap:6px; padding:0 7px; border:1px solid var(--border); border-radius:4px; font-size:12px; line-height:20px; background:#fafafa; }
       .offline-badge { border-color:var(--success-border); color:#389e0d; background:var(--success-bg); }
       .offline-badge::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--success); }
-      .tag { color:var(--muted); }
+      .tag-list { display:flex; align-items:center; flex-wrap:wrap; gap:8px; min-width:0; }
+      .tag { display:inline-flex; align-items:center; max-width:100%; min-height:22px; padding:0 7px; border:1px solid transparent; border-radius:4px; color:var(--ink); background:#f5f5f5; font-size:12px; font-weight:400; line-height:20px; overflow-wrap:anywhere; }
+      .tag.scope { color:var(--accent-active); background:var(--accent-soft); }
       main { width:min(100% - 48px,1248px); margin:auto; padding:24px 0 48px; }
       .layout { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr); gap:24px; align-items:start; }
       .panel { min-width:0; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--paper); }
       .panel-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; min-height:56px; padding:16px 24px; border-bottom:1px solid var(--line); }
       .panel-header h2 { font-size:16px; line-height:24px; }
       .panel-body { padding:24px; }
+      .git-panel { margin-bottom:24px; }
+      .git-panel .panel-body { padding-top:16px; padding-bottom:16px; }
+      .git-meta { display:flex; align-items:center; flex-wrap:wrap; gap:8px; min-width:0; }
+      .git-meta .tag { max-width:100%; overflow-wrap:anywhere; }
+      .git-controls { display:grid; grid-template-columns:minmax(240px,.8fr) minmax(0,1.2fr); gap:16px 24px; }
+      .branch-row { display:flex; align-items:center; gap:8px; }
+      .branch-row .select-control { flex:1; }
+      .git-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:8px; grid-column:1/-1; }
+      .git-actions .tag { margin-right:auto; }
+      .git-files { margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
+      .git-files summary { color:var(--muted); cursor:pointer; }
+      .git-files summary:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+      .git-files ul { max-height:176px; overflow:auto; margin:8px 0 0; padding:0; list-style:none; }
+      .git-files li { display:flex; align-items:flex-start; gap:8px; padding:8px 0; border-bottom:1px solid var(--line); }
+      .git-files code { flex:1; min-width:0; overflow-wrap:anywhere; font:12px/20px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+      .git-files .tag { flex:none; }
       .existing { display:grid; gap:12px; padding-bottom:24px; border-bottom:1px solid var(--line); }
       .existing-actions,.actions,.upload-row,.confirm-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
       .existing-actions { justify-content:flex-end; }
@@ -142,6 +160,12 @@
         .panel-header,.panel-body { padding:16px; }
         .field-grid { grid-template-columns:1fr; }
         .field.full { grid-column:auto; }
+        .git-controls { grid-template-columns:1fr; }
+        .git-actions { justify-content:flex-start; }
+        .git-actions .tag { flex-basis:100%; width:fit-content; margin:0 0 4px; }
+        .git-actions button { flex:1 1 auto; }
+        .git-files li { flex-wrap:wrap; }
+        .git-files code { flex-basis:calc(100% - 80px); }
         .existing-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
         .existing-actions #newPost { grid-column:1/-1; margin:0; }
         .upload-row { align-items:stretch; }
@@ -165,6 +189,48 @@
       </div>
     </header>
     <main>
+      <section class="panel git-panel" aria-labelledby="git-heading">
+        <div class="panel-header">
+          <h2 id="git-heading">Git</h2>
+          <div class="git-meta">
+            <span id="gitCurrent" class="tag">Memuat branch...</span>
+            <span id="gitSync" class="muted"></span>
+            <button id="gitRefresh" class="icon-button" type="button" aria-label="Perbarui status Git" title="Perbarui status Git">↻</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <form id="gitForm" class="git-controls">
+            <div class="field">
+              <label for="gitBranch">Branch lokal</label>
+              <div class="branch-row">
+                <div class="select-control"><select id="gitBranch" disabled></select></div>
+                <button id="gitSwitch" type="button" disabled>Pindah branch</button>
+              </div>
+            </div>
+            <div class="field">
+              <label class="required" for="gitMessage">Pesan commit</label>
+              <input id="gitMessage" maxlength="200" placeholder="Update artikel terbaru" required disabled />
+            </div>
+            <div class="git-actions">
+              <span class="tag scope">Seluruh repository</span>
+              <button id="gitCommit" type="submit" disabled>Commit</button>
+              <button id="gitCommitPush" class="primary" type="button" disabled>Commit & Push</button>
+              <button id="gitPush" type="button" disabled>Push</button>
+            </div>
+          </form>
+          <details class="git-files">
+            <summary id="gitChangesSummary">Perubahan file</summary>
+            <ul id="gitChanges"></ul>
+          </details>
+          <div role="status" aria-live="polite" aria-atomic="true">
+            <div id="gitStatus" class="status" hidden>
+              <span id="gitStatusIcon" class="status-icon" aria-hidden="true">✓</span>
+              <span id="gitStatusMessage" class="status-message"></span>
+              <button id="dismissGitStatus" class="icon-button" type="button" aria-label="Tutup notifikasi Git" title="Tutup notifikasi Git">×</button>
+            </div>
+          </div>
+        </div>
+      </section>
       <div class="layout">
         <section class="panel" aria-labelledby="editor-heading">
           <div class="panel-header">
@@ -214,6 +280,7 @@
               <div class="field">
                 <label for="tags">Tag</label>
                 <input id="tags" name="tags" placeholder="Engineering, Product" />
+                <div id="editorTags" class="tag-list" aria-label="Tag artikel" hidden></div>
               </div>
               <div class="field">
                 <label for="translationKey">Kunci terjemahan <span class="muted">(opsional)</span></label>
@@ -288,16 +355,17 @@
         </section>
         <aside class="panel preview-panel" aria-labelledby="preview-heading">
           <div class="panel-header">
-            <h2 id="preview-heading">Markdown</h2>
+            <h2 id="preview-heading">Pratinjau</h2>
             <div class="preview-modes" role="group" aria-label="Mode pratinjau">
-              <button id="showMarkdown" type="button" aria-controls="markdownPreview" aria-pressed="true">Markdown</button>
-              <button id="showPreview" type="button" aria-controls="articlePreview" aria-pressed="false" title="Tampilkan atau perbarui pratinjau artikel">Pratinjau</button>
+              <button id="showMarkdown" type="button" aria-controls="markdownPreview" aria-pressed="false">Markdown</button>
+              <button id="showPreview" type="button" aria-controls="articlePreview" aria-pressed="true">Pratinjau</button>
             </div>
           </div>
           <div class="panel-body">
-          <p id="pathPreview" class="path-preview"></p>
-          <pre id="markdownPreview" tabindex="0" aria-label="Sumber Markdown"></pre>
-          <iframe id="articlePreview" class="rendered-preview" title="Preview tulisan" sandbox hidden></iframe>
+          <p id="pathPreview" class="path-preview" hidden></p>
+          <p id="previewStatus" class="path-preview" role="status" aria-live="polite" hidden></p>
+          <pre id="markdownPreview" tabindex="0" aria-label="Sumber Markdown" hidden></pre>
+          <iframe id="articlePreview" class="rendered-preview" title="Preview tulisan" sandbox></iframe>
           </div>
         </aside>
       </div>
@@ -336,11 +404,21 @@
       const previewFrame = $('#articlePreview');
       const previewHeading = $('#preview-heading');
       const pathPreview = $('#pathPreview');
+      const previewStatus = $('#previewStatus');
+      let previewTimer;
+      let previewRequest;
       const status = $('#status');
       const statusMessage = $('#statusMessage');
       const confirmDialog = $('#confirmDialog');
       const existingPost = $('#existingPost');
       const deletePostButton = $('#deletePost');
+      const gitForm = $('#gitForm');
+      const gitBranch = $('#gitBranch');
+      const gitMessage = $('#gitMessage');
+      let gitState = null;
+      let gitWorking = false;
+      let editorBranch;
+      let savedEditorState = '';
       let loadedPost = null;
       let slugWasEdited = false;
       let translationKeyWasEdited = false;
@@ -362,7 +440,7 @@
           if (match) image.setAttribute('src', `${location.origin}/api/image?name=${encodeURIComponent(match[1])}`);
         }
         const origin = escapeHtml(location.origin);
-        const formatDate = (value) => new Intl.DateTimeFormat(lang.value === 'id' ? 'id-ID' : 'en-US', {
+        const formatDate = (value) => Number.isNaN(Date.parse(`${value}T00:00:00.000Z`)) ? '' : new Intl.DateTimeFormat(lang.value === 'id' ? 'id-ID' : 'en-US', {
           day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
         }).format(new Date(`${value}T00:00:00.000Z`));
         const meta = [
@@ -376,9 +454,10 @@
         return `<!doctype html><html lang="${escapeHtml(lang.value)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src ${origin} 'unsafe-inline'; img-src ${origin} blob:; font-src ${origin}; form-action 'none'; base-uri 'none'"><link rel="stylesheet" href="${origin}/api/site.css"><title>${escapeHtml(title.value)}</title></head><body><main id="main" class="reading-column"><article class="long-read"><header class="article-header"><p class="eyebrow">${lang.value === 'id' ? 'Tulisan' : 'Writing'}</p><h1 class="article-title">${escapeHtml(title.value)}</h1><p class="article-deck">${escapeHtml(description.value)}</p><div class="post-meta">${meta}</div></header>${cover}<div class="article-content">${rendered.body.innerHTML}</div></article></main></body></html>`;
       }
 
-      async function renderArticlePreview() {
+      async function renderArticlePreview(signal) {
         const response = await fetch('/api/preview', {
           method: 'POST',
+          signal,
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
             lang: lang.value, title: title.value, description: description.value,
@@ -387,6 +466,7 @@
           }),
         });
         const result = await response.json();
+        if (signal.aborted) return;
         if (!response.ok) throw new Error(result.error || 'Preview tulisan gagal dibuat.');
         previewFrame.srcdoc = articlePreviewDocument(result);
       }
@@ -403,13 +483,175 @@
         return `${lines.join('\n')}\n---\n\n${body.value.trim()}\n`;
       }
 
+      function editorState() {
+        return JSON.stringify({ slug:slug.value, markdown:markdownOutput() });
+      }
+
+      function setGitStatus(message, isError = false) {
+        $('#gitStatus').classList.toggle('error', isError);
+        $('#gitStatusIcon').textContent = isError ? '!' : '✓';
+        $('#gitStatus').hidden = !message;
+        $('#gitStatusMessage').textContent = message;
+      }
+
+      function updateGitControls() {
+        const ready = gitState?.branch && editorBranch === gitState.branch && !gitState.inProgress && !gitWorking;
+        const hasChanges = gitState?.changes.length;
+        gitBranch.disabled = !ready;
+        gitMessage.disabled = !ready;
+        $('#gitSwitch').disabled = !ready || gitBranch.value === gitState.branch;
+        $('#gitCommit').disabled = !ready || !hasChanges;
+        $('#gitCommitPush').disabled = !ready || !hasChanges || !gitState.hasOrigin;
+        $('#gitPush').disabled = !ready || !gitState.hasOrigin;
+        $('#gitRefresh').disabled = gitWorking;
+      }
+
+      async function refreshGit() {
+        const response = await fetch('/api/git/status');
+        const state = await response.json();
+        if (!response.ok) throw new Error(state.error || 'Status Git gagal dimuat.');
+        const selectedBranch = gitBranch.value;
+        const previousBranch = gitState?.branch;
+        gitState = state;
+        if (editorBranch === undefined) editorBranch = state.branch;
+        if (editorBranch !== state.branch) setGitStatus('Branch berubah di luar editor. Salin tulisan yang belum disimpan lalu muat ulang editor.', true);
+        gitBranch.replaceChildren(...state.branches.map((branch) => new Option(branch, branch)));
+        if (!state.branch) gitBranch.prepend(new Option('Detached HEAD', ''));
+        gitBranch.value = previousBranch === state.branch && state.branches.includes(selectedBranch) ? selectedBranch : state.branch;
+        $('#gitCurrent').textContent = state.branch ? `${state.branch} → ${state.hasOrigin ? `origin/${state.branch}` : 'tanpa remote origin'}` : 'Detached HEAD';
+        $('#gitSync').textContent = state.inProgress ? 'Operasi Git belum selesai' : state.ahead === null ? 'Referensi remote belum tersedia' : `${state.ahead} commit di depan · ${state.behind} di belakang`;
+        $('#gitChangesSummary').textContent = `${state.changes.length} perubahan file`;
+        $('#gitChanges').replaceChildren();
+        for (const change of state.changes) {
+          const item = document.createElement('li');
+          const badge = document.createElement('span');
+          badge.className = 'tag';
+          badge.textContent = change.code === '??' || change.code.includes('A') ? 'Baru' : change.code.includes('D') ? 'Dihapus' : change.code.includes('R') ? 'Dipindah' : 'Diubah';
+          const path = document.createElement('code');
+          path.textContent = change.originalPath ? `${change.originalPath} → ${change.path}` : change.path;
+          item.append(badge, path);
+          $('#gitChanges').append(item);
+        }
+        if (!state.changes.length) {
+          const item = document.createElement('li');
+          item.textContent = 'Working tree bersih.';
+          $('#gitChanges').append(item);
+        }
+        updateGitControls();
+      }
+
+      async function requestGit(action, data) {
+        const response = await fetch(`/api/git/${action}`, {
+          method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Operasi Git gagal.');
+        return result;
+      }
+
+      async function runGitAction(button, action) {
+        if (gitWorking) return;
+        gitWorking = true;
+        setBusy(button, true);
+        updateGitControls();
+        form.inert = true;
+        $('.existing').inert = true;
+        try { await action(); }
+        catch (err) { setGitStatus(err.message, true); }
+        finally {
+          try { await refreshGit(); }
+          catch (err) { gitState = null; setGitStatus(`${$('#gitStatusMessage').textContent} Status Git gagal diperbarui: ${err.message}`, true); }
+          gitWorking = false;
+          setBusy(button, false);
+          updateGitControls();
+          form.inert = false;
+          $('.existing').inert = false;
+        }
+      }
+
+      async function commitFromEditor(push) {
+        if (!gitForm.reportValidity() || !gitState?.branch || gitWorking) return;
+        if (editorState() !== savedEditorState) return setGitStatus('Tulisan belum disimpan. Simpan artikel sebelum commit.', true);
+        const expectedBranch = gitState.branch;
+        const message = gitMessage.value;
+        if (!await askConfirmation(push ? 'Commit & push ke GitHub?' : 'Commit seluruh perubahan?', `${gitState.changes.length} perubahan file repository akan di-commit pada branch ${expectedBranch}.${push ? ` Semua commit yang belum dipush pada branch ini akan dikirim ke origin/${expectedBranch}.` : ''}`, push ? 'Commit & Push' : 'Commit')) return;
+        await runGitAction(push ? $('#gitCommitPush') : $('#gitCommit'), async () => {
+          const committed = await requestGit('commit', { message, expectedBranch });
+          gitMessage.value = '';
+          if (!push) return setGitStatus(committed.message);
+          try {
+            const result = await requestGit('push', { expectedBranch });
+            setGitStatus(`${committed.message} ${result.message}`);
+          } catch (err) {
+            throw new Error(`${committed.message} Push gagal: ${err.message} Commit tetap tersimpan; gunakan tombol Push untuk mencoba lagi.`);
+          }
+        });
+      }
+
+      gitForm.addEventListener('submit', (event) => { event.preventDefault(); commitFromEditor(false); });
+      $('#gitCommitPush').addEventListener('click', () => commitFromEditor(true));
+      gitBranch.addEventListener('change', updateGitControls);
+      $('#gitRefresh').addEventListener('click', () => runGitAction($('#gitRefresh'), () => setGitStatus('')));
+      $('#dismissGitStatus').addEventListener('click', () => { $('#gitRefresh').focus(); setGitStatus(''); });
+      $('#gitPush').addEventListener('click', async () => {
+        if (!gitState?.branch || gitWorking) return;
+        const expectedBranch = gitState.branch;
+        if (!await askConfirmation('Push ke GitHub?', `Kirim semua commit pada branch ${expectedBranch} ke origin/${expectedBranch}?`, 'Push')) return;
+        await runGitAction($('#gitPush'), async () => setGitStatus((await requestGit('push', { expectedBranch })).message));
+      });
+      $('#gitSwitch').addEventListener('click', async () => {
+        if (!gitState?.branch || gitWorking) return;
+        if (gitState.changes.length) return setGitStatus('Masih ada perubahan file. Commit atau rapikan seluruh perubahan sebelum berpindah branch.', true);
+        const expectedBranch = gitState.branch;
+        const branch = gitBranch.value;
+        const unsaved = editorState() !== savedEditorState;
+        if (!await askConfirmation('Pindah branch?', `${unsaved ? 'Tulisan yang belum disimpan akan dibuang. ' : ''}Beralih dari ${expectedBranch} ke ${branch} dan reset editor artikel?`, 'Pindah branch', unsaved)) return;
+        await runGitAction($('#gitSwitch'), async () => {
+          const result = await requestGit('switch', { branch, expectedBranch });
+          editorBranch = branch;
+          resetEditor();
+          try { await refreshPosts(); } catch (err) { setStatus(err.message, true); }
+          setGitStatus(result.message);
+        });
+      });
+
       function updatePreview() {
         preview.textContent = markdownOutput();
         pathPreview.textContent = `src/content/blog/${lang.value}/${slug.value || 'judul-artikel'}.md`;
+        const articleTags = getTags();
+        $('#editorTags').replaceChildren(...articleTags.map((tag) => {
+          const chip = document.createElement('span');
+          chip.className = 'tag';
+          chip.textContent = tag;
+          return chip;
+        }));
+        $('#editorTags').hidden = !articleTags.length;
+        clearTimeout(previewTimer);
+        previewRequest?.abort();
+        if (previewFrame.hidden) return;
+        previewTimer = setTimeout(async () => {
+          const request = new AbortController();
+          previewRequest = request;
+          previewFrame.setAttribute('aria-busy', 'true');
+          try {
+            await renderArticlePreview(request.signal);
+            if (!request.signal.aborted) previewStatus.hidden = true;
+          } catch (err) {
+            if (!request.signal.aborted) {
+              previewStatus.textContent = err.message;
+              previewStatus.hidden = false;
+            }
+          } finally {
+            if (!request.signal.aborted) previewFrame.setAttribute('aria-busy', 'false');
+          }
+        }, 150);
       }
 
       function showMarkdownSource() {
-        previewFrame.srcdoc = '';
+        clearTimeout(previewTimer);
+        previewRequest?.abort();
+        previewStatus.hidden = true;
+        previewFrame.setAttribute('aria-busy', 'false');
         previewFrame.hidden = true;
         preview.hidden = false;
         pathPreview.hidden = false;
@@ -532,15 +774,14 @@
         translationKeyWasEdited = true;
         showCoverPreview();
         $('#savePost').textContent = 'Simpan perubahan';
-        showMarkdownSource();
         updatePreview();
+        savedEditorState = editorState();
         setStatus(`Tulisan dimuat dari src/content/blog/${lang.value}/${postSlug}.md.`);
       }
 
       function resetEditor() {
         const selectedLang = lang.value;
         form.reset();
-        showMarkdownSource();
         lang.value = selectedLang;
         pubDate.value = localDate();
         coverPreview.removeAttribute('src');
@@ -555,6 +796,7 @@
         $('#savePost').textContent = 'Simpan artikel';
         setStatus('Editor siap untuk artikel baru.');
         updatePreview();
+        savedEditorState = editorState();
       }
 
       async function uploadImage(file) {
@@ -610,7 +852,7 @@
         const response = await fetch('/api/image', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ name: file.name, dataUrl }),
+          body: JSON.stringify({ name: file.name, dataUrl, expectedBranch:editorBranch }),
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Foto gagal disimpan.');
@@ -643,7 +885,6 @@
       lang.addEventListener('change', async () => {
         loadedPost = null;
         updateDeleteButton();
-        showMarkdownSource();
         slugWasEdited = false;
         $('#savePost').textContent = 'Simpan artikel';
         try { await refreshPosts(); } catch (err) { setStatus(err.message, true); }
@@ -668,7 +909,7 @@
           const response = await fetch('/api/delete', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(target),
+            body: JSON.stringify({ ...target, expectedBranch:editorBranch }),
           });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || 'Artikel gagal dihapus.');
@@ -678,6 +919,7 @@
             ? ` Beberapa foto tidak dapat dibersihkan: ${result.cleanupErrors.join(', ')}.`
             : '';
           setStatus(`Artikel ${result.path} dihapus.${cleanupMessage}`, Boolean(cleanupMessage));
+          await refreshGit().catch((err) => setGitStatus(err.message, true));
         } catch (err) { setStatus(err.message, true); }
         finally { setBusy(deletePostButton, false); updateDeleteButton(); }
       });
@@ -691,6 +933,7 @@
           showCoverPreview();
           updatePreview();
           setStatus(`Foto ${result.mimeType.slice(6).toUpperCase()} (${Math.round(result.size / 1024)} KB) tersimpan di src/content/blog/images/${result.filename}.`);
+          await refreshGit().catch((err) => setGitStatus(err.message, true));
         } catch (err) { setStatus(err.message, true); }
         finally { setBusy(button, false); }
       });
@@ -703,6 +946,7 @@
           insertAtCursor(`![${alt}](../images/${result.filename})\n\n`);
           setStatus(`Foto ${result.mimeType.slice(6).toUpperCase()} (${Math.round(result.size / 1024)} KB) tersimpan dan disisipkan pada ukuran 1536×1024.`);
           $('#inlineFile').value = '';
+          await refreshGit().catch((err) => setGitStatus(err.message, true));
         } catch (err) { setStatus(err.message, true); }
         finally { setBusy(button, false); }
       });
@@ -740,30 +984,24 @@
           setStatus('Markdown disalin ke clipboard.');
         } catch { setStatus('Clipboard tidak tersedia. Salin isi panel pratinjau secara manual.', true); }
       });
-      $('#showPreview').addEventListener('click', async () => {
-        const button = $('#showPreview');
-        setBusy(button, true);
-        $('#showMarkdown').disabled = true;
-        try {
-          await renderArticlePreview();
-          preview.hidden = true;
-          previewFrame.hidden = false;
-          pathPreview.hidden = true;
-          previewHeading.textContent = 'Pratinjau';
-          button.setAttribute('aria-pressed', 'true');
-          $('#showMarkdown').setAttribute('aria-pressed', 'false');
-          setStatus('Pratinjau artikel diperbarui.');
-          if (window.matchMedia('(max-width: 800px)').matches) previewFrame.scrollIntoView({ block: 'nearest' });
-        } catch (err) { setStatus(err.message, true); }
-        finally { setBusy(button, false); $('#showMarkdown').disabled = false; }
+      $('#showPreview').addEventListener('click', () => {
+        preview.hidden = true;
+        previewFrame.hidden = false;
+        pathPreview.hidden = true;
+        previewHeading.textContent = 'Pratinjau';
+        $('#showPreview').setAttribute('aria-pressed', 'true');
+        $('#showMarkdown').setAttribute('aria-pressed', 'false');
+        updatePreview();
       });
       $('#showMarkdown').addEventListener('click', showMarkdownSource);
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
+        const stateToSave = editorState();
         const button = $('#savePost');
         setBusy(button, true);
         try {
           const payload = {
+            expectedBranch: editorBranch,
             lang: lang.value,
             slug: slug.value.trim(),
             title: title.value,
@@ -790,6 +1028,7 @@
             result = await response.json();
           }
           if (!response.ok) throw new Error(result.error || 'Artikel gagal disimpan.');
+          savedEditorState = stateToSave;
           loadedPost = { lang: lang.value, slug: payload.slug };
           slugWasEdited = true;
           $('#savePost').textContent = 'Simpan perubahan';
@@ -797,6 +1036,7 @@
           existingPost.value = payload.slug;
           updateDeleteButton();
           setStatus(`Artikel tersimpan di ${result.path}.`);
+          await refreshGit().catch((err) => setGitStatus(err.message, true));
         } catch (err) { setStatus(err.message, true); }
         finally { setBusy(button, false); }
       });
@@ -804,6 +1044,8 @@
       pubDate.value = localDate();
       refreshPosts().catch((err) => setStatus(err.message, true));
       updatePreview();
+      savedEditorState = editorState();
+      refreshGit().catch((err) => setGitStatus(err.message, true));
     </script>
   </body>
 </html>

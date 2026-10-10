@@ -178,8 +178,24 @@ main:focus { outline: none; }
 }
 .post-row p { margin: 0.45rem 0 0; color: #555; }
 .post-meta { display: flex; flex-wrap: wrap; gap: 0.55rem 1rem; margin-top: 0.65rem; color: var(--muted); font-size: 0.78rem; }
-.tag-list { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-.tag { color: var(--muted); }
+.tag-list { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.tag {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 22px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #000000e0;
+  background: #f5f5f5;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
 
 .resume-page, .archive-page { padding: clamp(3rem, 8vw, 5.5rem) 0; }
 .page-intro { margin-bottom: 2.5rem; }
